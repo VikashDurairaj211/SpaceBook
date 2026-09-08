@@ -9,7 +9,7 @@
 [![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Google Gemini](https://img.shields.io/badge/Google_Gemini-AI_Assistant-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
-[![Vitest](https://img.shields.io/badge/Tests-26%2F26_Passed-22C55E?style=for-the-badge&logo=vitest&logoColor=white)](https://vitest.dev/)
+[![Vitest](https://img.shields.io/badge/Tests-62%2F62_Passed-22C55E?style=for-the-badge&logo=vitest&logoColor=white)](https://vitest.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 [Features](#-key-features) • [Aira AI Assistant](#-aira-ai-assistant--voice-engine) • [Enterprise Hardening](./docs/ENTERPRISE_HARDENING.md) • [Architecture](#-architecture) • [Getting Started](#-getting-started) • [Testing](#-automated-tests) • [API Docs](./docs/API_DOCUMENTATION.md)
@@ -118,8 +118,8 @@ SpaceBook manages **15 Meeting Rooms** and **453 Hotseat Desks** in Coimbatore:
 ### 2. Installation
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/spacebook.git
-cd spacebook
+git clone https://github.com/VikashDurairaj211/SpaceBook.git
+cd SpaceBook
 
 # Install dependencies
 npm install

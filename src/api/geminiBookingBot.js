@@ -399,18 +399,23 @@ export function validateBookingDraft(draft, rooms = ALL_SYSTEM_ROOMS) {
     return { isValid: false, reason: "Office is closed on weekends (Saturday & Sunday)", sanitizedDraft: null };
   }
 
-  // 3. Time validation (10:00 - 22:00)
+  // 3. Time validation (10:00 to 22:00 in minutes)
   const startTime = String(draft.startTime || "10:00").slice(0, 5);
   const endTime = String(draft.endTime || "11:00").slice(0, 5);
-  const startH = parseInt(startTime.split(":")[0], 10);
-  const endH = parseInt(endTime.split(":")[0], 10);
+  const [startH, startM] = startTime.split(":").map(Number);
+  const [endH, endM] = endTime.split(":").map(Number);
+  const startMin = (startH || 0) * 60 + (startM || 0);
+  const endMin = (endH || 0) * 60 + (endM || 0);
 
-  if (startH < 10 || startH >= 22 || endH > 22 || startH >= endH) {
+  // 10:00 AM is 600 mins, 10:00 PM is 1320 mins
+  if (startMin < 600 || endMin > 1320 || startMin >= endMin) {
     return { isValid: false, reason: "Booking times must be between 10:00 AM and 10:00 PM IST", sanitizedDraft: null };
   }
 
   // 4. Attendees validation
-  const attendees = Math.max(1, Math.min(Number(draft.attendees) || 5, targetRoom.capacity || 50));
+  const rawAttendees = Number(draft.attendees);
+  const clampedAttendees = rawAttendees === 0 ? 1 : (rawAttendees > 0 ? rawAttendees : 5);
+  const attendees = Math.max(1, Math.min(clampedAttendees, targetRoom.capacity || 50));
 
   // 5. Title sanitization
   const title = sanitizeText(draft.title) || "Workspace Meeting";

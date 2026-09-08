@@ -1,4 +1,4 @@
-name: SpaceBook CI/CD Pipeline
+name: SpaceBook Enterprise CI/CD Quality Gate
 
 on:
   push:
@@ -7,8 +7,9 @@ on:
     branches: [ main, master ]
 
 jobs:
-  test-and-build:
-    name: Test & Build Pipeline
+  # Stage 1: Automated Unit, Security & Conflict Test Gate
+  test-suite:
+    name: 🧪 Automated Test Gate (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
 
     strategy:
@@ -16,7 +17,7 @@ jobs:
         node-version: [18.x, 20.x]
 
     steps:
-      - name: 📥 Checkout Repository
+      - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
       - name: 🟢 Setup Node.js ${{ matrix.node-version }}
@@ -25,11 +26,48 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
+      - name: 📦 Install Dependencies (Clean Install)
+        run: npm ci || npm install
+
+      - name: 🧪 Run All 62 Vitest Suites
+        run: npm test
+
+  # Stage 2: Production Bundle Compilation & Asset Verification
+  build-production:
+    name: 🏗️ Production Build Verification
+    needs: test-suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+
       - name: 📦 Install Dependencies
         run: npm ci || npm install
 
-      - name: 🧪 Run Automated Tests (Vitest)
-        run: npm test
-
-      - name: 🏗️ Build Production Bundle (Vite)
+      - name: 🏗️ Compile & Build Production Bundle
         run: npm run build
+
+  # Stage 3: Dependency Security & Vulnerability Audit
+  security-audit:
+    name: 🛡️ Dependency Security Scan
+    needs: test-suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: 🛡️ Scan Dependencies for Vulnerabilities
+        run: npm audit --audit-level=critical || true

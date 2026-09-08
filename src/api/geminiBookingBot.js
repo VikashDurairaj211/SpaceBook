@@ -256,8 +256,8 @@ Total Hotseat Desks: 453 across 3 modules in Coimbatore:
 2. "book_room" (readyToBook: true, bookingDraft: { ... }):
    - ONLY when the user explicitly wants to book, reserve, hold, or schedule a room (e.g. "Book Conference Room 1 tomorrow at 2 PM for 5 people", "Reserve Discussion Room 2 on Friday at 11 AM").
    - Extract the closest room ID, date (YYYY-MM-DD), startTime (HH:MM), endTime (HH:MM), attendees, and meaningful meeting title.
-   - If requested time on today (${todayIso}) has already passed (${currentTimeStr}), automatically schedule for tomorrow at that time.
-   - If outside operating hours (10:00 to 22:00), adjust within operating hours.
+   - If requested time on today (${todayIso}) has already passed (${currentTimeStr}), automatically schedule for tomorrow at that time and mention it clearly.
+   - If the user explicitly requests a time outside operating hours (10:00 AM to 10:00 PM IST, e.g. "8 AM" or "11 PM"), DO NOT silently modify their requested time. Instead, set readyToBook: false, bookingDraft: null, and politely explain that bookings are available from 10:00 AM to 10:00 PM IST, asking if they would like 10:00 AM instead.
 
 ${recentHistoryText ? `=== RECENT CHAT HISTORY ===\n${recentHistoryText}\n` : ""}
 === CURRENT USER QUERY ===
@@ -825,10 +825,11 @@ Additionally, we have **453 hotseat desk workstations**. Which room would you li
   const timeMatch = explicitTimeMatch || lower.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/);
 
   if (timeMatch) {
-    let hour = parseInt(timeMatch[1], 10);
+    let rawHour = parseInt(timeMatch[1], 10);
     const min = timeMatch[2] || "00";
     const ampm = timeMatch[3];
 
+    let hour = rawHour;
     if (ampm === "pm" && hour < 12) {
       hour += 12;
     } else if (ampm === "am" && hour === 12) {
@@ -837,6 +838,18 @@ Additionally, we have **453 hotseat desk workstations**. Which room would you li
       if (hour >= 1 && hour <= 9) {
         hour += 12;
       }
+    }
+
+    // Advisory check: If explicitly requested time is outside 10:00 to 22:00, advise user politely
+    if ((ampm === "am" && (rawHour < 10 || rawHour === 12)) || hour >= 22 || (ampm === "pm" && rawHour >= 10 && rawHour < 12)) {
+      const requestedDisplay = `${timeMatch[1]}:${min} ${ampm ? ampm.toUpperCase() : ""}`.trim();
+      return {
+        intent: "general_query",
+        botReply: `⏰ **SpaceBook Operating Hours Advisory**:\n\nOur workspace operates Monday through Friday from **10:00 AM to 10:00 PM IST**.\n\nSince **${requestedDisplay}** is outside office hours, would you like to schedule starting at **10:00 AM** instead?`,
+        readyToBook: false,
+        bookingDraft: null,
+        isGeminiPowered: false,
+      };
     }
 
     hour = Math.max(10, Math.min(21, hour));

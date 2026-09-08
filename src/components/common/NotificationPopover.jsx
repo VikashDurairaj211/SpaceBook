@@ -168,18 +168,28 @@ export default function NotificationPopover({ onClose }) {
             const isUnread = !item.isRead;
             const notificationId = item.notificationId || item.id || index;
 
+            const targetBookingId =
+              item.bookingId ||
+              item.booking_id ||
+              item.id ||
+              (item.message && item.message.match(/#?(\d+)/) ? item.message.match(/#?(\d+)/)[1] : null);
+
             return (
               <div
                 key={notificationId}
-                className={`p-3 rounded-xl transition ${
-                  isUnread ? "bg-amber-50/40 font-medium" : "hover:bg-portal-bg"
+                className={`p-3 rounded-xl transition cursor-pointer group ${
+                  isUnread ? "bg-amber-50/50 font-medium hover:bg-amber-50" : "hover:bg-slate-50"
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
+                  <Link
+                    to={targetBookingId ? `/my-bookings?highlight=${targetBookingId}` : "/my-bookings"}
+                    onClick={onClose}
+                    className="min-w-0 flex-1 block"
+                  >
                     {/* DTO Title */}
                     <div className="flex items-center gap-2">
-                      <p className="text-xs font-bold text-slate-900 truncate">
+                      <p className="text-xs font-bold text-slate-900 group-hover:text-sky-700 transition-colors truncate">
                         {item.title || "Notification"}
                       </p>
                       {isUnread && (
@@ -193,10 +203,15 @@ export default function NotificationPopover({ onClose }) {
                       </p>
                     )}
                     {/* DTO TimeAgo / CreatedOn */}
-                    <p className="mt-1.5 text-[10px] text-slate-400 font-mono">
-                      {item.timeAgo || item.createdOn || "Just now"}
-                    </p>
-                  </div>
+                    <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                      <span>{item.timeAgo || item.createdOn || "Just now"}</span>
+                      {targetBookingId && (
+                        <span className="text-sky-600 font-sans font-bold group-hover:underline">
+                          View Pass →
+                        </span>
+                      )}
+                    </div>
+                  </Link>
 
                   <button
                     type="button"

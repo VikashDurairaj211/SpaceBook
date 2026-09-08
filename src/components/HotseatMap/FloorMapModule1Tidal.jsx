@@ -87,13 +87,17 @@ function Seat({ seat, selected, onClick }) {
   const isBookable = isAvailable || isMyBooked;
 
   const formattedSeatId = `WS-04-${String(seat.number).padStart(3, "0")}`;
+  const is3Digit = Number(seat.number) >= 100;
 
   return (
     <button
       type="button"
+      id={`seat-${formattedSeatId}`}
+      data-seat-id={formattedSeatId}
+      data-seat-num={seat.number}
       className={`tp-seat ${statusClass} ${
         selected ? "tp-selected" : ""
-      } ${!isBookable ? "tp-disabled" : ""}`}
+      } ${is3Digit ? "tp-seat-3digit" : ""} ${!isBookable ? "tp-disabled" : ""}`}
       onClick={() => {
         if (isBookable) {
           onClick({ ...seat, id: formattedSeatId, label: formattedSeatId });
@@ -223,6 +227,7 @@ export default function FloorMapTidalParkModule1({
   seats = [],
   onSelect,
   activeSeatId,
+  filterSection = "ALL",
 }) {
   const seatsByNumber = {};
   seats.forEach((seat) => {
@@ -234,71 +239,85 @@ export default function FloorMapTidalParkModule1({
     }
   });
 
+  const showA = filterSection === "ALL" || filterSection === "A";
+  const showB = filterSection === "ALL" || filterSection === "B";
+  const showC = filterSection === "ALL" || filterSection === "C";
+  const showD = filterSection === "ALL" || filterSection === "D";
+
   return (
     <div className="tp-map-wrapper">
-      <div className="tp-header-banner">
-        <div className="tp-title">MODULE 1 FLOOR MAP</div>
-        
-      </div>
-
       <div className="tp-floor-map">
         {/* LEFT COLUMN: SECTION D & SECTION C */}
-        <div className="tp-col-left">
-          <Section
-            title="SECTION D (Seats 165 – 224)"
-            rows={SECTION_D}
-            customRowLabels={ROW_LABELS_D}
-            seatsByNumber={seatsByNumber}
-            onSelect={onSelect}
-            activeSeatId={activeSeatId}
-            columns={6}
-          />
+        {(showC || showD) && (
+          <div className="tp-col-left">
+            {showD && (
+              <Section
+                title="SECTION D (Seats 165 – 224)"
+                rows={SECTION_D}
+                customRowLabels={ROW_LABELS_D}
+                seatsByNumber={seatsByNumber}
+                onSelect={onSelect}
+                activeSeatId={activeSeatId}
+                columns={6}
+              />
+            )}
 
-          <Section
-            title="SECTION C (Seats 119 – 164)"
-            rows={SECTION_C}
-            customRowLabels={ROW_LABELS_C}
-            seatsByNumber={seatsByNumber}
-            onSelect={onSelect}
-            activeSeatId={activeSeatId}
-            columns={6}
-          />
-        </div>
+            {showC && (
+              <Section
+                title="SECTION C (Seats 119 – 164)"
+                rows={SECTION_C}
+                customRowLabels={ROW_LABELS_C}
+                seatsByNumber={seatsByNumber}
+                onSelect={onSelect}
+                activeSeatId={activeSeatId}
+                columns={6}
+              />
+            )}
+          </div>
+        )}
 
         {/* RIGHT COLUMN: RECEPTION, SECTION A & SECTION B */}
-        <div className="tp-col-right">
-          <div className="tp-reception-container">
-            <Room className="tp-reception-room">
-              RECEPTION
-            </Room>
+        {(showA || showB) && (
+          <div className="tp-col-right">
+            {filterSection === "ALL" && (
+              <div className="tp-reception-container">
+                <Room className="tp-reception-room">
+                  RECEPTION
+                </Room>
+              </div>
+            )}
+
+            {showA && (
+              <Section
+                title="SECTION A (Seats 1 – 62)"
+                rows={SECTION_A}
+                rowPrefix="A"
+                seatsByNumber={seatsByNumber}
+                onSelect={onSelect}
+                activeSeatId={activeSeatId}
+                columns={7}
+              />
+            )}
+
+            {showB && (
+              <Section
+                title="SECTION B (Seats 63 – 118)"
+                rows={SECTION_B}
+                rowPrefix="B"
+                seatsByNumber={seatsByNumber}
+                onSelect={onSelect}
+                activeSeatId={activeSeatId}
+                columns={7}
+              />
+            )}
           </div>
-
-          <Section
-            title="SECTION A (Seats 1 – 62)"
-            rows={SECTION_A}
-            rowPrefix="A"
-            seatsByNumber={seatsByNumber}
-            onSelect={onSelect}
-            activeSeatId={activeSeatId}
-            columns={7}
-          />
-
-          <Section
-            title="SECTION B (Seats 63 – 118)"
-            rows={SECTION_B}
-            rowPrefix="B"
-            seatsByNumber={seatsByNumber}
-            onSelect={onSelect}
-            activeSeatId={activeSeatId}
-            columns={7}
-          />
-        </div>
+        )}
       </div>
 
       <style>{`
         .tp-map-wrapper {
-          --tp-seat: clamp(16px, 1.8vw, 25px);
-          --tp-label: clamp(12px, 1.3vw, 19px);
+          --tp-seat: clamp(19px, 1.9vw, 29px);
+          --tp-label: clamp(11px, 1.1vw, 15px);
 
           width: 100%;
           min-width: 0;
@@ -314,7 +333,7 @@ export default function FloorMapTidalParkModule1({
 
         .tp-header-banner {
           text-align: center;
-          margin-bottom: 12px;
+          margin-bottom: 10px;
         }
 
         .tp-title {
@@ -328,7 +347,7 @@ export default function FloorMapTidalParkModule1({
 
         .tp-subtitle {
           color: #64748b;
-          font-size: clamp(9px, 0.8vw, 11px);
+          font-size: clamp(9px, 0.8vw, 11.5px);
           font-weight: 600;
           letter-spacing: 0.03em;
           margin-top: 2px;
@@ -340,13 +359,13 @@ export default function FloorMapTidalParkModule1({
           display: flex;
           justify-content: center;
           align-items: flex-start;
-          gap: clamp(100px, 15vw, 240px);
-          padding: 18px 28px;
+          gap: clamp(14px, 2vw, 28px);
+          padding: 10px 14px;
           box-sizing: border-box;
           background: #ffffff;
           border: 1px solid #e2e8f0;
           border-radius: 10px;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
           overflow-x: auto;
         }
 
@@ -354,8 +373,8 @@ export default function FloorMapTidalParkModule1({
           .tp-floor-map {
             flex-direction: column;
             align-items: center;
-            gap: 16px;
-            padding: 12px;
+            gap: 12px;
+            padding: 8px;
           }
         }
 
@@ -384,9 +403,9 @@ export default function FloorMapTidalParkModule1({
           box-sizing: border-box;
           width: 85%;
           max-width: 200px;
-          height: clamp(38px, 4.8vw, 54px);
+          height: clamp(38px, 4.2vw, 52px);
           border-radius: 8px;
-          font-size: clamp(8.5px, 0.8vw, 11.5px);
+          font-size: clamp(9px, 0.85vw, 11.5px);
           line-height: 1.2;
           font-weight: 800;
           letter-spacing: 0.04em;
@@ -417,8 +436,8 @@ export default function FloorMapTidalParkModule1({
           color: #ffffff;
           border-radius: 4px;
           text-align: center;
-          font-size: clamp(7.5px, 0.7vw, 10px);
-          line-height: 1.1;
+          font-size: clamp(8px, 0.75vw, 10.5px);
+          line-height: 1.2;
           font-weight: 800;
           letter-spacing: 0.02em;
           white-space: nowrap;
@@ -428,10 +447,10 @@ export default function FloorMapTidalParkModule1({
           display: grid;
           justify-content: center;
           align-items: center;
-          gap: 2.5px;
-          margin-bottom: 2.5px;
+          gap: 3px;
+          margin-bottom: 3px;
           color: #071d61;
-          font-size: clamp(7px, 0.62vw, 9px);
+          font-size: clamp(8px, 0.72vw, 10px);
           line-height: 1;
           text-align: center;
         }
@@ -444,7 +463,7 @@ export default function FloorMapTidalParkModule1({
           width: 100%;
           display: flex;
           flex-direction: column;
-          gap: 2.5px;
+          gap: 3px;
           align-items: center;
         }
 
@@ -452,16 +471,16 @@ export default function FloorMapTidalParkModule1({
           display: grid;
           justify-content: center;
           align-items: center;
-          gap: 2.5px;
+          gap: 3px;
         }
 
         .tp-row-label {
           color: #071d61;
-          font-size: clamp(7px, 0.62vw, 9px);
+          font-size: clamp(8px, 0.72vw, 10px);
           line-height: 1;
           font-weight: 700;
           text-align: left;
-          padding-right: 2px;
+          padding-right: 3px;
         }
 
         .tp-seat-cell {
@@ -476,80 +495,123 @@ export default function FloorMapTidalParkModule1({
         }
 
         .tp-seat {
-          width: 94%;
-          height: 90%;
+          width: 95%;
+          height: 93%;
           min-width: 0;
           min-height: 0;
           padding: 0;
           box-sizing: border-box;
-          border-radius: 4px;
-          font-size: clamp(7px, 0.65vw, 9.5px);
-          font-weight: 700;
+          border-radius: 6px;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+          font-size: clamp(9.5px, 0.9vw, 12px);
+          font-weight: 800;
           line-height: 1;
           display: flex;
           justify-content: center;
           align-items: center;
           cursor: pointer;
-          transition: transform 0.12s ease, box-shadow 0.12s ease;
+          transition:
+            transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+            box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+            background 0.15s ease,
+            border-color 0.15s ease;
           outline: none;
         }
 
         .tp-seat:hover:not(.tp-disabled) {
-          transform: translateY(-1px);
-          box-shadow: 0 2px 4px rgba(15, 23, 42, 0.15);
+          transform: translateY(-2px) scale(1.06);
+          box-shadow: 0 4px 10px -2px rgba(16, 185, 129, 0.4);
+          z-index: 10;
         }
 
-        .tp-vacant {
-          background: #22c55e;
-          border: 1.5px solid #16a34a;
-          color: #ffffff;
-        }
-
-        .tp-selected {
-          background: #3b82f6 !important;
-          border: 1.5px solid #2563eb !important;
-          color: #ffffff !important;
-          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35) !important;
-        }
-
-        .tp-occupied {
-          background: #ef4444 !important;
-          border: 1.5px solid #dc2626 !important;
-          color: #ffffff !important;
-        }
-
-        .tp-reserved {
-          background: #fef3c7;
-          border: 1.5px solid #f59e0b;
-          color: #b45309;
-        }
-
-        .tp-my-booked {
-          background: #ef4444 !important;
-          border: 1.5px solid #dc2626 !important;
-          color: #ffffff !important;
-          box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.30) !important;
+        .tp-seat-3digit {
+          font-size: clamp(8px, 0.75vw, 10px) !important;
+          letter-spacing: -0.03em !important;
+          font-variant-numeric: tabular-nums;
         }
 
         .tp-disabled {
           cursor: not-allowed !important;
-          opacity: 0.95;
+          opacity: 0.85;
+        }
+
+        /* Available: Soft emerald gradient with dark green monospace */
+        .tp-vacant {
+          background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+          border: 1.5px solid #10b981;
+          color: #065f46;
+          box-shadow: 0 1px 2px rgba(16, 185, 129, 0.12);
+        }
+
+        .tp-vacant:hover {
+          background: #10b981 !important;
+          color: #ffffff !important;
+          border-color: #059669 !important;
+        }
+
+        /* Selected: Electric Blue Gradient with Aura */
+        .tp-selected {
+          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+          border: 2px solid #1e40af !important;
+          color: #ffffff !important;
+          box-shadow: 0 0 0 3.5px rgba(59, 130, 246, 0.45), 0 4px 8px -2px rgba(29, 78, 216, 0.3) !important;
+          transform: translateY(-2px) scale(1.08) !important;
+          z-index: 20;
+        }
+
+        /* Occupied: Muted soft rose desk */
+        .tp-occupied {
+          background: #fef2f2 !important;
+          border: 1.5px solid #fecaca !important;
+          color: #b91c1c !important;
+          box-shadow: none !important;
+        }
+
+        .tp-reserved {
+          background: #fffbeb !important;
+          border: 1.5px solid #fde68a !important;
+          color: #b45309 !important;
+        }
+
+        /* Your Booking: Royal Indigo/Violet Gradient with glow */
+        .tp-my-booked {
+          background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+          border: 2px solid #3730a3 !important;
+          color: #ffffff !important;
+          box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.45) !important;
+          animation: tp-my-seat-pulse 2s infinite !important;
+          z-index: 10;
+        }
+
+        @keyframes tp-my-seat-pulse {
+          0% {
+            box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.8), 0 0 10px rgba(99, 102, 241, 0.5);
+          }
+          70% {
+            box-shadow: 0 0 0 8px rgba(99, 102, 241, 0), 0 0 18px rgba(99, 102, 241, 0.3);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(99, 102, 241, 0), 0 0 10px rgba(99, 102, 241, 0.5);
+          }
         }
 
         .tp-seat-gap {
-          width: 94%;
-          height: 90%;
+          width: 95%;
+          height: 92%;
           box-sizing: border-box;
-          border: 1px solid #e5e7eb;
-          border-radius: 4px;
+          border: 1px dashed #e2e8f0;
+          border-radius: 6px;
           background: #f8fafc;
           display: grid;
           place-items: center;
+          opacity: 0.5;
         }
 
+        /* Unavailable slots */
         .tp-seat-unavailable {
-          background: #94a3b8 !important;
-          border: 1.5px solid #64748b !important;
+          background: #f1f5f9 !important;
+          border: 1px dashed #cbd5e1 !important;
+          opacity: 0.45;
         }
       `}</style>
     </div>

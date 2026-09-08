@@ -1,259 +1,76 @@
 /* =========================================================
-   OFFICE MAP PAGE
-   Keeps the complete office map inside the browser window
-   without vertical scrolling.
+   OFFICE MAP COCKPIT LAYOUT
+   Modern, compact, split-view layout for Hotseat Reservation
    ========================================================= */
 
-.office-map-page {
+.office-cockpit-container {
   width: 100%;
-  height: calc(100vh - 70px);
-
-  min-height: 0;
-  min-width: 0;
-
+  max-width: 100%;
+  margin: 0 auto;
   box-sizing: border-box;
+}
 
+/* Map canvas scroll container */
+.compact-map-canvas {
+  width: 100%;
+  min-height: 480px;
+  max-height: 680px;
+  overflow: auto;
+  position: relative;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
   display: flex;
-  flex-direction: column;
-
-  overflow: hidden;
-}
-
-
-/* =========================================================
-   PAGE HEADER / TITLE AREA
-   ========================================================= */
-
-.office-map-header {
-  flex: 0 0 auto;
-
-  width: 100%;
-
-  box-sizing: border-box;
-
-  padding: 6px 16px 4px;
-}
-
-
-/* Main page title */
-
-.office-map-header h1,
-.office-map-title {
-  margin: 0;
-
-  font-size: clamp(18px, 1.8vw, 26px);
-
-  line-height: 1.15;
-
-  font-weight: 800;
-}
-
-
-/* Description */
-
-.office-map-description {
-  margin: 2px 0 0;
-
-  font-size: 12px;
-
-  line-height: 1.2;
-}
-
-
-/* =========================================================
-   FILTER AREA
-   ========================================================= */
-
-.office-map-filters {
-  flex: 0 0 auto;
-
-  width: 100%;
-
-  box-sizing: border-box;
-
-  padding: 4px 16px;
-
-  display: flex;
-
   align-items: center;
-
-  gap: 8px;
-
-  flex-wrap: nowrap;
-}
-
-
-/* =========================================================
-   FLOOR MAP TITLE
-   ========================================================= */
-
-.office-map-floor-title {
-  flex: 0 0 auto;
-
-  margin: 2px 0 3px;
-
-  padding: 0 16px;
-
-  font-size: clamp(13px, 1.3vw, 18px);
-
-  line-height: 1.1;
-
-  font-weight: 700;
-}
-
-
-/* =========================================================
-   FLOOR MAP CONTAINER
-
-   IMPORTANT:
-   This takes all remaining vertical space.
-   ========================================================= */
-
-.office-map-floor-container {
-  flex: 1 1 auto;
-
-  width: 100%;
-
-  min-width: 0;
-  min-height: 0;
-
+  justify-content: center;
+  padding: 16px;
   box-sizing: border-box;
-
-  padding: 0 8px 6px;
-
-  overflow: hidden;
-
-  display: flex;
 }
 
-
-/* =========================================================
-   FLOOR MAP COMPONENT
-
-   Allows FloorMapModule1 to stretch to available height.
-   ========================================================= */
-
-.office-map-floor-container > * {
-  width: 100%;
-  height: 100%;
-
-  min-width: 0;
-  min-height: 0;
+/* Custom scrollbars for clean look */
+.compact-map-canvas::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
+.compact-map-canvas::-webkit-scrollbar-track,
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
 
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
+.compact-map-canvas::-webkit-scrollbar-thumb,
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
 
-@media (max-width: 900px) {
+.compact-map-canvas::-webkit-scrollbar-thumb:hover,
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
 
-  .office-map-page {
-    height: calc(100vh - 60px);
+/* Pulse animation for active selected seat */
+@keyframes seat-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
   }
-
-  .office-map-header {
-    padding: 5px 10px 3px;
+  70% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
   }
-
-  .office-map-filters {
-    padding: 3px 10px;
-    gap: 5px;
-  }
-
-  .office-map-floor-title {
-    padding: 0 10px;
-  }
-
-  .office-map-floor-container {
-    padding: 0 4px 4px;
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
   }
 }
 
-
-/* =========================================================
-   SHORT SCREEN
-
-   Useful for laptops with smaller vertical resolution.
-   ========================================================= */
-
-@media (max-height: 750px) {
-
-  .office-map-page {
-    height: calc(100vh - 60px);
-  }
-
-  .office-map-header {
-    padding-top: 3px;
-    padding-bottom: 2px;
-  }
-
-  .office-map-description {
-    font-size: 10px;
-  }
-
-  .office-map-filters {
-    padding-top: 2px;
-    padding-bottom: 2px;
-  }
-
-  .office-map-floor-title {
-    margin-top: 1px;
-    margin-bottom: 2px;
-  }
-
-  .office-map-floor-container {
-    padding-bottom: 3px;
-  }
+.seat-active-pulse {
+  animation: seat-pulse 1.8s infinite;
 }
 
-
-/* =========================================================
-   VERY SHORT SCREEN
-   ========================================================= */
-
-@media (max-height: 650px) {
-
-  .office-map-header {
-    padding-top: 2px;
-    padding-bottom: 1px;
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .compact-map-canvas {
+    max-height: 480px;
   }
-
-  .office-map-description {
-    display: none;
-  }
-
-  .office-map-filters {
-    padding-top: 1px;
-    padding-bottom: 1px;
-  }
-
-  .office-map-floor-title {
-    margin: 1px 0;
-  }
-
-  .office-map-floor-container {
-    padding-bottom: 2px;
-  }
-}
-
-
-/* =========================================================
-   PREVENT BODY SCROLLING
-   ========================================================= */
-
-html,
-body,
-#root {
-  min-height: 0;
-}
-
-
-/*
-   Only use this if your whole application is supposed
-   to be a fixed viewport application.
-*/
-
-body {
-  overflow: hidden;
-}
+}

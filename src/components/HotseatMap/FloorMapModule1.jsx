@@ -66,12 +66,17 @@ function Seat({ seat, selected, onClick }) {
   // Available seats and user's own booking are clickable.
   const isBookable = isAvailable || isMyBooked;
 
+  const is3Digit = Number(seat.number) >= 100;
+
   return (
     <button
       type="button"
+      id={`seat-${seat.id || `EO1-${seat.number}`}`}
+      data-seat-id={seat.id || `EO1-${seat.number}`}
+      data-seat-num={seat.number}
       className={`m1-seat ${statusClass} ${
         selected ? "m1-selected" : ""
-      } ${!isBookable ? "m1-disabled" : ""}`}
+      } ${is3Digit ? "m1-seat-3digit" : ""} ${!isBookable ? "m1-disabled" : ""}`}
       onClick={() => {
         if (isBookable) {
           onClick(seat);
@@ -201,6 +206,7 @@ export default function FloorMapModule1({
   seats = [],
   onSelect,
   activeSeatId,
+  filterSection = "ALL",
 }) {
   const seatsByNumber =
     Object.fromEntries(
@@ -210,82 +216,89 @@ export default function FloorMapModule1({
       ])
     );
 
+  const showA = filterSection === "ALL" || filterSection === "A";
+  const showB = filterSection === "ALL" || filterSection === "B";
+  const showC = filterSection === "ALL" || filterSection === "C";
+
   return (
     <div className="m1-map-wrapper">
-
-      <div className="m1-title">
-        MODULE 1 FLOOR MAP
-      </div>
-
-      <div className="m1-floor-map">
-
+      <div className={`m1-floor-map ${filterSection !== "ALL" ? "m1-single-section" : ""}`}>
         {/* SECTION A */}
-        <div className="m1-a">
-          <Section
-            title="SECTION A (Seats 1 – 32)"
-            rows={SECTION_A}
-            seatsByNumber={seatsByNumber}
-            onSelect={onSelect}
-            activeSeatId={activeSeatId}
-            columns={5}
-            rowPrefix="A"
-          />
-        </div>
+        {showA && (
+          <div className="m1-a">
+            <Section
+              title="SECTION A (Seats 1 – 32)"
+              rows={SECTION_A}
+              seatsByNumber={seatsByNumber}
+              onSelect={onSelect}
+              activeSeatId={activeSeatId}
+              columns={5}
+              rowPrefix="A"
+            />
+          </div>
+        )}
 
         {/* RECEPTION */}
-        <div className="m1-reception">
-          <Room className="m1-reception-room">
-            RECEPTION
-          </Room>
-        </div>
+        {filterSection === "ALL" && (
+          <div className="m1-reception">
+            <Room className="m1-reception-room">
+              RECEPTION
+            </Room>
+          </div>
+        )}
 
         {/* SECTION C */}
-        <div className="m1-c">
-          <Section
-            title="SECTION C (Seats 59 – 98)"
-            rows={SECTION_C}
-            seatsByNumber={seatsByNumber}
-            onSelect={onSelect}
-            activeSeatId={activeSeatId}
-            columns={7}
-            rowPrefix="C"
-          />
-        </div>
+        {showC && (
+          <div className="m1-c">
+            <Section
+              title="SECTION C (Seats 59 – 98)"
+              rows={SECTION_C}
+              seatsByNumber={seatsByNumber}
+              onSelect={onSelect}
+              activeSeatId={activeSeatId}
+              columns={7}
+              rowPrefix="C"
+            />
+          </div>
+        )}
 
         {/* CONFERENCE ROOM */}
-        <div className="m1-conference">
-          <Room className="m1-conference-room">
-            CONFERENCE
-            <br />
-            ROOM
-          </Room>
-        </div>
+        {filterSection === "ALL" && (
+          <div className="m1-conference">
+            <Room className="m1-conference-room">
+              CONFERENCE
+              <br />
+              ROOM
+            </Room>
+          </div>
+        )}
 
         {/* SECTION B */}
-        <div className="m1-b">
-          <Section
-            title="SECTION B (Seats 33 – 58)"
-            rows={SECTION_B}
-            seatsByNumber={seatsByNumber}
-            onSelect={onSelect}
-            activeSeatId={activeSeatId}
-            columns={7}
-            rowPrefix="B"
-          />
-        </div>
-
+        {showB && (
+          <div className="m1-b">
+            <Section
+              title="SECTION B (Seats 33 – 58)"
+              rows={SECTION_B}
+              seatsByNumber={seatsByNumber}
+              onSelect={onSelect}
+              activeSeatId={activeSeatId}
+              columns={7}
+              rowPrefix="B"
+            />
+          </div>
+        )}
       </div>
 
       <style>{`
         .m1-map-wrapper {
-          --m1-seat: clamp(16px, 1.8vw, 25px);
-          --m1-label: clamp(12px, 1.3vw, 19px);
+          --m1-seat: clamp(21px, 2.1vw, 32px);
+          --m1-label: clamp(12px, 1.2vw, 16px);
 
           width: 100%;
           min-width: 0;
           box-sizing: border-box;
           margin: 0;
-          padding: 2px 4px;
+          padding: 4px 8px;
 
           display: flex;
           flex-direction: column;
@@ -296,7 +309,7 @@ export default function FloorMapModule1({
         .m1-title {
           flex: 0 0 auto;
           width: 100%;
-          margin: 0 0 4px;
+          margin: 0 0 6px;
           padding: 0;
 
           box-sizing: border-box;
@@ -305,8 +318,8 @@ export default function FloorMapModule1({
 
           color: #071d61;
 
-          font-size: clamp(12px, 1.2vw, 16px);
-          line-height: 1.1;
+          font-size: clamp(13px, 1.3vw, 17px);
+          line-height: 1.2;
 
           font-weight: 800;
           letter-spacing: 0.025em;
@@ -329,16 +342,16 @@ export default function FloorMapModule1({
             "a reception c"
             "conference b c";
 
-          gap: 0;
+          gap: 4px;
 
-          padding: 2px;
+          padding: 8px;
 
           box-sizing: border-box;
 
           background: #ffffff;
 
           border: 1px solid #e2e8f0;
-          border-radius: 8px;
+          border-radius: 10px;
         }
 
         .m1-a {
@@ -407,8 +420,8 @@ export default function FloorMapModule1({
           width: max-content;
           max-width: 95%;
 
-          margin: 0 auto 3px;
-          padding: 2px 8px;
+          margin: 0 auto 4px;
+          padding: 2px 10px;
 
           box-sizing: border-box;
 
@@ -419,8 +432,8 @@ export default function FloorMapModule1({
 
           text-align: center;
 
-          font-size: clamp(7.5px, 0.7vw, 10px);
-          line-height: 1.1;
+          font-size: clamp(8px, 0.75vw, 10.5px);
+          line-height: 1.2;
 
           font-weight: 800;
           letter-spacing: 0.02em;
@@ -434,13 +447,13 @@ export default function FloorMapModule1({
           justify-content: center;
           align-items: center;
 
-          gap: 2px;
+          gap: 3px;
 
-          margin-bottom: 2px;
+          margin-bottom: 3px;
 
           color: #071d61;
 
-          font-size: clamp(7px, 0.62vw, 9px);
+          font-size: clamp(8px, 0.72vw, 10px);
           line-height: 1;
 
           text-align: center;
@@ -456,7 +469,7 @@ export default function FloorMapModule1({
           display: flex;
           flex-direction: column;
 
-          gap: 2px;
+          gap: 3px;
         }
 
         .m1-row {
@@ -465,18 +478,19 @@ export default function FloorMapModule1({
           justify-content: center;
           align-items: center;
 
-          gap: 2px;
+          gap: 3px;
         }
 
         .m1-row-label {
           color: #071d61;
 
-          font-size: clamp(7px, 0.62vw, 9px);
+          font-size: clamp(8px, 0.72vw, 10px);
           line-height: 1;
 
           text-align: left;
 
           font-weight: 700;
+          padding-right: 3px;
         }
 
         .m1-seat-cell {
@@ -495,8 +509,8 @@ export default function FloorMapModule1({
         }
 
         .m1-seat {
-          width: 94%;
-          height: 90%;
+          width: 95%;
+          height: 93%;
 
           min-width: 0;
           min-height: 0;
@@ -505,89 +519,124 @@ export default function FloorMapModule1({
 
           box-sizing: border-box;
 
-          border-radius: 4px;
+          border-radius: 6px;
 
-          font-size: clamp(7px, 0.65vw, 9.5px);
-          font-weight: 700;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+          font-size: clamp(10px, 1.0vw, 13px);
+          font-weight: 800;
           line-height: 1;
 
           cursor: pointer;
 
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
           transition:
-            transform 0.12s ease,
-            box-shadow 0.12s ease;
+            transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+            box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+            background 0.15s ease,
+            border-color 0.15s ease;
         }
 
         .m1-seat:hover:not(.m1-disabled) {
-          transform: translateY(-1px);
+          transform: translateY(-2px) scale(1.06);
+          box-shadow: 0 4px 10px -2px rgba(16, 185, 129, 0.4);
+          z-index: 10;
+        }
 
-          box-shadow:
-            0 2px 4px
-            rgba(15, 23, 42, 0.15);
+        .m1-seat-3digit {
+          font-size: clamp(8.5px, 0.8vw, 11px) !important;
+          letter-spacing: -0.03em !important;
+          font-variant-numeric: tabular-nums;
         }
 
         .m1-disabled {
           cursor: not-allowed !important;
-          opacity: 0.95;
+          opacity: 0.85;
         }
 
+        /* Available: Soft emerald gradient with dark green monospace */
         .m1-vacant {
-          background: #22c55e;
-          border: 1.5px solid #16a34a;
-          color: #ffffff;
+          background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+          border: 1.5px solid #10b981;
+          color: #065f46;
+          box-shadow: 0 1px 2px rgba(16, 185, 129, 0.12);
         }
 
-        .m1-occupied {
-          background: #ef4444 !important;
-          border: 1.5px solid #dc2626 !important;
+        .m1-vacant:hover {
+          background: #10b981 !important;
           color: #ffffff !important;
+          border-color: #059669 !important;
+        }
+
+        /* Occupied: Muted soft rose desk */
+        .m1-occupied {
+          background: #fef2f2 !important;
+          border: 1.5px solid #fecaca !important;
+          color: #b91c1c !important;
+          box-shadow: none !important;
         }
 
         .m1-reserved {
-          background: #fef3c7;
-          border: 1.5px solid #f59e0b;
-          color: #b45309;
+          background: #fffbeb !important;
+          border: 1.5px solid #fde68a !important;
+          color: #b45309 !important;
         }
 
+        /* Your Booking: Royal Indigo/Violet Gradient with glow */
         .m1-my-booked {
-          background: #ef4444 !important;
-          border: 1.5px solid #dc2626 !important;
+          background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+          border: 2px solid #3730a3 !important;
           color: #ffffff !important;
-
-          box-shadow:
-            0 0 0 2px
-            rgba(239, 68, 68, 0.30) !important;
+          box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.45) !important;
+          animation: m1-my-seat-pulse 2s infinite !important;
+          z-index: 10;
         }
 
-        .m1-selected {
-          background: #3b82f6 !important;
-          border: 1.5px solid #2563eb !important;
-          color: #ffffff !important;
+        @keyframes m1-my-seat-pulse {
+          0% {
+            box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.8), 0 0 10px rgba(99, 102, 241, 0.5);
+          }
+          70% {
+            box-shadow: 0 0 0 8px rgba(99, 102, 241, 0), 0 0 18px rgba(99, 102, 241, 0.3);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(99, 102, 241, 0), 0 0 10px rgba(99, 102, 241, 0.5);
+          }
+        }
 
-          box-shadow:
-            0 0 0 2px
-            rgba(59, 130, 246, 0.35) !important;
+        /* Selected: Electric Blue Gradient with Aura */
+        .m1-selected {
+          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+          border: 2px solid #1e40af !important;
+          color: #ffffff !important;
+          box-shadow: 0 0 0 3.5px rgba(59, 130, 246, 0.45), 0 4px 8px -2px rgba(29, 78, 216, 0.3) !important;
+          transform: translateY(-2px) scale(1.08) !important;
+          z-index: 20;
         }
 
         .m1-seat-gap {
-          width: 94%;
-          height: 90%;
+          width: 95%;
+          height: 92%;
 
           box-sizing: border-box;
 
-          border: 1px solid #e5e7eb;
-          border-radius: 4px;
+          border: 1px dashed #e2e8f0;
+          border-radius: 6px;
 
           background: #f8fafc;
 
           display: grid;
           place-items: center;
+          opacity: 0.5;
         }
 
-        /* Added grey styling for unavailable null slots */
+        /* Unavailable slots */
         .m1-seat-unavailable {
-          background: #94a3b8 !important;
-          border: 1.5px solid #64748b !important;
+          background: #f1f5f9 !important;
+          border: 1px dashed #cbd5e1 !important;
+          opacity: 0.45;
         }
 
         .m1-room {
@@ -601,11 +650,11 @@ export default function FloorMapModule1({
           box-sizing: border-box;
 
           width: 82%;
-          height: clamp(44px, 5.5vw, 68px);
+          height: clamp(44px, 5vw, 64px);
 
           border-radius: 8px;
 
-          font-size: clamp(8px, 0.75vw, 11px);
+          font-size: clamp(9px, 0.85vw, 11.5px);
           line-height: 1.2;
 
           font-weight: 800;

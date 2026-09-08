@@ -1,15 +1,28 @@
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import FloorMapModule1 from "./FloorMapModule1";
 import FloorMapModule2 from "./FloorMapModule2";
 import FloorMapTidalParkModule1 from "./FloorMapModule1Tidal";
+import "./officeMapLayout.css";
 import "../../index.css";
 import {
   CheckCircle2,
   X,
   ChevronDown,
   AlertTriangle,
+  Search,
+  Calendar,
+  MapPin,
+  Clock,
+  Sparkles,
+  Layers,
+  Info,
+  Check,
+  RotateCcw,
+  Building2,
+  UserCheck,
+  ExternalLink,
 } from "lucide-react";
 import Card from "../../components/common/Card";
 import Button from "../../components/common/Button";
@@ -188,71 +201,88 @@ function Toast({ message, details, onClose }) {
 // Conflict Modal
 // ---------------------------------------------------------------------------
 
-function ConflictModal({ conflictData, onClose }) {
-  if (!conflictData) return null;
+function ConflictModal({ conflictData, onClose, onLocateMyDesk }) {
+  if (!conflictData || typeof document === "undefined") return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl space-y-4">
-        <div className="flex items-center gap-3 text-amber-600">
-          <div className="rounded-full bg-amber-100 p-2">
-            <AlertTriangle size={20} />
+  return createPortal(
+    <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 border border-amber-300/80 dark:border-amber-800/80 p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
+        <div className="flex items-center gap-3 text-amber-600 dark:text-amber-400">
+          <div className="rounded-2xl bg-amber-100 dark:bg-amber-950/70 p-2.5">
+            <AlertTriangle size={22} />
           </div>
-          <h2 className="text-lg font-bold text-slate-900">Booking Conflict</h2>
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Booking Conflict</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Existing reservation detected</p>
+          </div>
         </div>
 
-        <div className="rounded-lg bg-amber-50 border border-amber-200 p-3.5 text-xs text-amber-900 leading-relaxed font-medium">
-          {conflictData.message || "You already have an active hotseat booking for this date."}
+        <div className="rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 p-3.5 text-xs text-amber-900 dark:text-amber-200 leading-relaxed font-medium">
+          {conflictData.message || "You already have an active hotseat reservation for this date."}
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 space-y-2 text-xs">
+        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-850/80 p-4 space-y-2.5 text-xs">
           {conflictData.existingBookingId && (
-            <div className="flex justify-between">
-              <span className="text-slate-500 font-medium">Existing Booking ID:</span>
-              <span className="font-mono font-semibold text-slate-800">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">Booking ID:</span>
+              <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                 #{conflictData.existingBookingId}
               </span>
             </div>
           )}
 
           {conflictData.seatId && (
-            <div className="flex justify-between">
-              <span className="text-slate-500 font-medium">Reserved Seat ID:</span>
-              <span className="font-semibold text-slate-800">
-                Seat #{conflictData.seatId}
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">Your Reserved Desk:</span>
+              <span className="font-mono font-bold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-2 py-0.5 rounded-md">
+                Desk #{conflictData.seatId}
+                {conflictData.office ? ` (${conflictData.office})` : ""}
               </span>
             </div>
           )}
 
           <div className="flex justify-between items-center">
-            <span className="text-slate-500 font-medium">Status:</span>
-            <span className="bg-[#658362] text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded-full">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">Status:</span>
+            <span className="bg-emerald-600 text-white text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full">
               {conflictData.bookingStatus || "Confirmed"}
             </span>
           </div>
         </div>
 
-        <p className="text-xs text-slate-500 leading-normal">
-          You can only hold one hotseat reservation per day. Please cancel your existing reservation if you wish to choose another seat.
+        <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal">
+          You can only hold one hotseat reservation per day. Click below to view where your desk is located on the floor map.
         </p>
 
-        <div className="flex justify-end gap-2 pt-2">
+        <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            className="rounded-xl border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
           >
             Close
           </button>
+
+          {onLocateMyDesk && conflictData.seatId && (
+            <button
+              type="button"
+              onClick={() => onLocateMyDesk(conflictData)}
+              className="rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 px-4 py-2 text-xs font-bold text-white shadow-md shadow-indigo-500/25 flex items-center gap-1.5 transition active:scale-95"
+            >
+              <MapPin size={13} />
+              <span>Locate My Desk</span>
+            </button>
+          )}
+
           <a
             href="/my-bookings"
-            className="rounded-lg bg-[#2F6FE0] px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 text-center"
+            className="rounded-xl bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 px-3.5 py-2 text-xs font-bold text-white text-center transition"
           >
-            View My Bookings
+            View Bookings
           </a>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -434,6 +464,7 @@ function buildModulesFromSeatArray(seatArray) {
 
 export default function HotseatBookingApp() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [bookings, setBookings] = useState([]);
   const [modules, setModules] = useState(() => buildInitialModuleSeats());
   const [toastState, setToastState] = useState(null);
@@ -447,6 +478,32 @@ export default function HotseatBookingApp() {
   const [location, setLocation] = useState("Coimbatore");
   const [zone, setZone] = useState("Tidel Park");
   const [moduleId, setModuleId] = useState("module1");
+
+  useEffect(() => {
+    const moduleParam = searchParams.get("module") || "";
+    const dateParam = searchParams.get("date") || "";
+
+    if (dateParam && !isWeekend(dateParam)) {
+      setTargetDate(dateParam);
+    }
+
+    if (moduleParam) {
+      const lower = moduleParam.toLowerCase();
+      if (lower.includes("tidel") || lower.includes("tidal")) {
+        setLocation("Coimbatore");
+        setZone("Tidel Park");
+        setModuleId("module1");
+      } else if (lower.includes("module 2") || lower.includes("m2")) {
+        setLocation("Coimbatore");
+        setZone("Elcot Park");
+        setModuleId("module2");
+      } else if (lower.includes("module 1") || lower.includes("m1")) {
+        setLocation("Coimbatore");
+        setZone("Elcot Park");
+        setModuleId("module1");
+      }
+    }
+  }, [searchParams]);
 
   const getAuthHeaders = () => {
     let token =
@@ -893,6 +950,36 @@ export default function HotseatBookingApp() {
     }
   }
 
+  const handleLocateConflictSeat = (conflict) => {
+    setConflictData(null);
+    const seatIdToFind = conflict?.seatId;
+    if (!seatIdToFind) return;
+
+    const sId = String(seatIdToFind).toUpperCase();
+    if (sId.includes("WS") || sId.includes("TIDEL") || sId.includes("TIDAL")) {
+      setZone("Tidel Park");
+      setModuleId("module1");
+    } else if (sId.includes("EO2")) {
+      setZone("Elcot Park");
+      setModuleId("module2");
+    } else {
+      setZone("Elcot Park");
+      setModuleId("module1");
+    }
+
+    setTimeout(() => {
+      const cleanNum = String(seatIdToFind).split("-").pop().replace(/[^0-9]/g, "");
+      const el =
+        document.querySelector(`[data-seat-id="${seatIdToFind}"]`) ||
+        document.getElementById(`seat-${seatIdToFind}`) ||
+        document.querySelector(`[data-seat-num="${cleanNum}"]`);
+
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+      }
+    }, 200);
+  };
+
   if (loading && modules.length === 0) {
     return (
       <div className="p-10 text-center text-sm text-slate-500">
@@ -914,6 +1001,7 @@ export default function HotseatBookingApp() {
       <ConflictModal
         conflictData={conflictData}
         onClose={() => setConflictData(null)}
+        onLocateMyDesk={handleLocateConflictSeat}
       />
 
       <OfficeMapTab
@@ -937,7 +1025,7 @@ export default function HotseatBookingApp() {
 }
 
 // ---------------------------------------------------------------------------
-// Office Map Tab
+// Office Map Cockpit View (Compact Split Layout)
 // ---------------------------------------------------------------------------
 
 function OfficeMapTab({
@@ -957,24 +1045,37 @@ function OfficeMapTab({
   setModuleId,
 }) {
   const [active, setActive] = useState(null);
+  const [filterSection, setFilterSection] = useState("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [expectedCheckIn, setExpectedCheckIn] = useState("");
   const [bookingResult, setBookingResult] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [cancelConfirming, setCancelConfirming] = useState(false);
+
+  // Handle Escape key to dismiss active desk modal
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === "Escape" && active) {
+        setActive(null);
+        setBookingResult(null);
+        setCancelConfirming(false);
+      }
+    }
+
+    if (active) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [active]);
 
   const today = getTodayKey();
   const tomorrow = getTomorrowKey();
 
-  const LOCATIONS = ["Coimbatore"];
-  const ZONES = ["Tidel Park", "Elcot Park"];
-
   const isTidelPark =
     String(zone).toLowerCase().includes("tidel") ||
     String(zone).toLowerCase().includes("tidal");
-
-  const availableModuleOptions = isTidelPark
-    ? [{ value: "module1", label: "Module 1" }]
-    : [
-        { value: "module1", label: "Module 1" },
-        { value: "module2", label: "Module 2" },
-      ];
 
   const currentModule = isTidelPark
     ? modules.find((m) => m.office === "Tidel Park" || m.office === "Tidal Park") || {
@@ -993,7 +1094,30 @@ function OfficeMapTab({
     : modules.find((m) => m.id === moduleId && m.office === "Elcot Park") ||
       modules.find((m) => m.id === moduleId);
 
-  const readyForModule = location && zone;
+  const myGlobalBookingForDate = bookings.find((b) => {
+    const bookingDateStr = normalizeDateKey(b.bookingDate || b.date || b.expectedCheckIn);
+    const status = b.status?.toLowerCase();
+    return (
+      bookingDateStr === targetDate &&
+      status !== "cancelled" &&
+      status !== "rejected" &&
+      status !== "expired"
+    );
+  });
+
+  const getBookingLocation = (b) => {
+    if (!b) return null;
+    const bSeat = String(b.seatNumber || b.seat || "").toUpperCase();
+    const bMod = String(b.module || "").toLowerCase();
+
+    if (bSeat.startsWith("WS") || bMod.includes("tidel") || bMod.includes("tidal")) {
+      return { office: "Tidel Park", moduleId: "module1", moduleLabel: "Module 1" };
+    } else if (bSeat.includes("EO2") || bMod.includes("module 2") || bMod.includes("eo2")) {
+      return { office: "Elcot Park", moduleId: "module2", moduleLabel: "Module 2" };
+    } else {
+      return { office: "Elcot Park", moduleId: "module1", moduleLabel: "Module 1" };
+    }
+  };
 
   const myBookingForDate = bookings.find((b) => {
     const bookingDateStr = normalizeDateKey(b.bookingDate || b.date || b.expectedCheckIn);
@@ -1001,7 +1125,6 @@ function OfficeMapTab({
     const bSeat = String(b.seatNumber || b.seat || "").toUpperCase();
     const bMod = String(b.module || "").toLowerCase();
 
-    // Verify that the booking belongs strictly to the currently viewed module
     let belongsToCurrentModule = false;
     if (isTidelPark) {
       belongsToCurrentModule = bSeat.startsWith("WS") || bMod.includes("tidel") || bMod.includes("tidal");
@@ -1020,191 +1143,553 @@ function OfficeMapTab({
     );
   });
 
-  const myBookedSeatNumber = String(myBookingForDate?.seatNumber || myBookingForDate?.seat || myBookingForDate?.seatId || "").trim();
+  const myBookedSeatNumber = String(
+    myBookingForDate?.seatNumber || myBookingForDate?.seat || myBookingForDate?.seatId || ""
+  ).trim();
 
-  const normalizeSeat = (s) => String(s || "").toLowerCase().replace(/^(hot seat|seat|ws-04-)/i, "").trim();
+  const normalizeSeat = (s) =>
+    String(s || "")
+      .toLowerCase()
+      .replace(/^(hot seat|seat|ws-04-)/i, "")
+      .trim();
 
-  const currentSeats = (currentModule?.seats || []).map((seat) => {
-    const isMine = Boolean(
-      myBookingForDate &&
-      myBookedSeatNumber &&
-      (
-        normalizeSeat(myBookedSeatNumber) === normalizeSeat(seat.id) ||
-        normalizeSeat(myBookedSeatNumber) === normalizeSeat(seat.number) ||
-        myBookedSeatNumber.toLowerCase() === String(seat.id || "").toLowerCase()
-      )
-    );
+  const currentSeats = useMemo(() => {
+    return (currentModule?.seats || []).map((seat) => {
+      const isMine = Boolean(
+        myBookingForDate &&
+          myBookedSeatNumber &&
+          (
+            normalizeSeat(myBookedSeatNumber) === normalizeSeat(seat.id) ||
+            normalizeSeat(myBookedSeatNumber) === normalizeSeat(seat.number) ||
+            myBookedSeatNumber.toLowerCase() === String(seat.id || "").toLowerCase()
+          )
+      );
 
-    if (seat.id === active?.id) {
-      return { ...seat, status: "selected", isMyBooking: isMine };
-    }
+      if (active && (seat.id === active.id || seat.number === active.number)) {
+        return { ...seat, status: "selected", isMyBooking: isMine };
+      }
 
-    if (isMine) {
-      return { ...seat, status: "occupied", isMyBooking: true };
-    }
+      if (isMine) {
+        return { ...seat, status: "occupied", isMyBooking: true };
+      }
 
-    const normalizedStatus = String(seat.status || "").toLowerCase();
+      const normalizedStatus = String(seat.status || "").toLowerCase();
+      const isBooked =
+        normalizedStatus === "occupied" ||
+        normalizedStatus === "booked" ||
+        normalizedStatus === "confirmed";
 
-    const isBooked =
-      normalizedStatus === "occupied" ||
-      normalizedStatus === "booked" ||
-      normalizedStatus === "confirmed";
+      if (isBooked) {
+        return { ...seat, status: "occupied", isMyBooking: false };
+      }
 
-    if (isBooked) {
-      return { ...seat, status: "occupied", isMyBooking: false };
-    }
+      if (normalizedStatus === "reserved") {
+        return { ...seat, status: "reserved", isMyBooking: false };
+      }
 
-    if (normalizedStatus === "reserved") {
-      return { ...seat, status: "reserved", isMyBooking: false };
-    }
+      return { ...seat, status: "available", isMyBooking: false };
+    });
+  }, [currentModule, myBookingForDate, myBookedSeatNumber, active]);
 
-    return { ...seat, status: "available", isMyBooking: false };
-  });
+  // Statistics
+  const totalSeats = currentSeats.length;
+  const occupiedCount = currentSeats.filter((s) => s.status === "occupied" || s.isMyBooking).length;
+  const availableCount = Math.max(0, totalSeats - occupiedCount);
+  const myBookingCount = myBookingForDate ? 1 : 0;
+  const occupancyPercent = totalSeats > 0 ? Math.round((availableCount / totalSeats) * 100) : 0;
 
+  // Handle seat click
   function handleSelectSeat(seat) {
+    setBookingResult(null);
+    setCancelConfirming(false);
+
     const isMine = Boolean(
       seat.isMyBooking ||
-      (
-        myBookingForDate &&
-        myBookedSeatNumber &&
         (
-          normalizeSeat(myBookedSeatNumber) === normalizeSeat(seat.id) ||
-          normalizeSeat(myBookedSeatNumber) === normalizeSeat(seat.number) ||
-          myBookedSeatNumber.toLowerCase() === String(seat.id || "").toLowerCase()
+          myBookingForDate &&
+          myBookedSeatNumber &&
+          (
+            normalizeSeat(myBookedSeatNumber) === normalizeSeat(seat.id) ||
+            normalizeSeat(myBookedSeatNumber) === normalizeSeat(seat.number) ||
+            myBookedSeatNumber.toLowerCase() === String(seat.id || "").toLowerCase()
+          )
         )
-      )
     );
 
     if (isMine) {
-      setBookingResult(null);
       setActive({ ...seat, isMyBooking: true });
+      if (myBookingForDate?.expectedCheckInTime) {
+        const timeStr = String(myBookingForDate.expectedCheckInTime).substring(0, 5);
+        setExpectedCheckIn(timeStr);
+      }
       return;
     }
 
     if (seat.status === "occupied") {
+      setActive({ ...seat, status: "occupied", isMyBooking: false });
       return;
     }
 
-    if (myBookingForDate) {
+    // Global conflict check: block booking immediately if employee has any reservation on this date across all offices/modules
+    const conflictBooking = myBookingForDate || myGlobalBookingForDate;
+    if (conflictBooking) {
+      const loc = getBookingLocation(conflictBooking);
+      const isDifferentModule = !myBookingForDate && Boolean(myGlobalBookingForDate);
+      const locationMsg = isDifferentModule && loc
+        ? ` at ${loc.office} (${loc.moduleLabel})`
+        : " for the selected date";
+
       setConflictData({
-        message: "You already have a hotseat booking in this module for this date.",
-        existingBookingId: myBookingForDate.bookingId || myBookingForDate.id,
-        seatId: myBookingForDate.seatId || myBookingForDate.seatNumber,
-        bookingStatus: myBookingForDate.status || "Confirmed"
+        message: `You already have an active hotseat reservation${locationMsg}. You can only hold one hotseat reservation per day.`,
+        existingBookingId: conflictBooking.bookingId || conflictBooking.id,
+        seatId: conflictBooking.seatNumber || conflictBooking.seat || conflictBooking.seatId,
+        bookingStatus: conflictBooking.status || "Confirmed",
+        office: loc?.office,
+        moduleId: loc?.moduleId,
       });
       return;
     }
 
-    setBookingResult(null);
+    setExpectedCheckIn("");
     setActive(seat);
   }
 
-  async function handleReserve(item, expectedCheckIn, date) {
+  // Handle search seat
+  function handleSearch(e) {
+    e.preventDefault();
+    const cleanQuery = searchQuery.trim().toLowerCase();
+    if (!cleanQuery) return;
+
+    const found = currentSeats.find((s) => {
+      const sId = String(s.id || "").toLowerCase();
+      const sNum = String(s.number || "").toLowerCase();
+      const sLbl = String(s.label || "").toLowerCase();
+      return (
+        sId === cleanQuery ||
+        sNum === cleanQuery ||
+        sLbl === cleanQuery ||
+        sId.endsWith(`-${cleanQuery}`) ||
+        sId.includes(cleanQuery)
+      );
+    });
+
+    if (found) {
+      handleSelectSeat(found);
+    } else {
+      setBookingResult({
+        ok: false,
+        message: `Desk "${searchQuery}" not found in ${currentModule?.label || "current module"}.`,
+      });
+    }
+  }
+
+  // Handle reserve action
+  async function handleConfirmReserve() {
+    if (!active) return;
+    if (isWeekend(targetDate)) {
+      setBookingResult({ ok: false, message: "Hotseat bookings are not allowed on weekends." });
+      return;
+    }
+    if (!expectedCheckIn) {
+      setBookingResult({ ok: false, message: "Please select an expected check-in time before confirming." });
+      return;
+    }
+
+    setIsSubmitting(true);
+    setBookingResult(null);
+
     const result = await onReserve({
-      item,
-      targetDate: date || targetDate,
+      item: active,
+      targetDate,
       expectedCheckIn,
     });
 
+    setIsSubmitting(false);
     setBookingResult(result);
-    if (result.ok) setActive(null);
 
-    return result;
+    if (result.ok) {
+      setActive(null);
+    }
   }
 
+  // Handle cancel booking action
+  async function handleCancelActiveBooking() {
+    if (!myBookingForDate) return;
+    const bookingId = myBookingForDate.bookingId || myBookingForDate.id || myBookingForDate.hotseatBookingId;
+    if (!bookingId) return;
+
+    setIsSubmitting(true);
+    const result = await onCancel(bookingId);
+    setIsSubmitting(false);
+    setBookingResult(result);
+    setCancelConfirming(false);
+    if (result.ok) {
+      setActive(null);
+    }
+  }
+
+  // Handle update check in time
+  async function handleUpdateActiveTime() {
+    if (!myBookingForDate || !active) return;
+    const bookingId = myBookingForDate.bookingId || myBookingForDate.id || myBookingForDate.hotseatBookingId;
+
+    setIsSubmitting(true);
+    const result = await onEdit(bookingId, {
+      date: targetDate,
+      expectedCheckIn,
+      seatId: active.id || active.seatNumber,
+      seatIdNumber: active.seatId || active.number,
+    });
+    setIsSubmitting(false);
+    setBookingResult(result);
+  }
+
+  // Section choices
+  const sectionOptions = isTidelPark
+    ? [
+        { id: "ALL", label: "All Sections" },
+        { id: "A", label: "Section A (1–62)" },
+        { id: "B", label: "Section B (63–118)" },
+        { id: "C", label: "Section C (119–164)" },
+        { id: "D", label: "Section D (165–224)" },
+      ]
+    : moduleId === "module2"
+    ? [
+        { id: "ALL", label: "All Sections" },
+        { id: "A", label: "Section A (1–59)" },
+        { id: "B", label: "Section B (60–79)" },
+        { id: "C", label: "Section C (80–131)" },
+      ]
+    : [
+        { id: "ALL", label: "All Sections" },
+        { id: "A", label: "Section A (1–32)" },
+        { id: "B", label: "Section B (33–58)" },
+        { id: "C", label: "Section C (59–98)" },
+      ];
+
+  const timePresets = ["10:00", "11:00", "14:00", "16:00", "18:00"];
+
   return (
-    <div className="office-map-tab">
-      <h1 className="font-display text-3xl font-bold mb-1">
-        Hotseat Reservation
-      </h1>
+    <div className="office-cockpit-container space-y-4">
+      {/* 1. TOP HEADER & QUICK SWITCHER */}
+      <div className="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-sm space-y-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
+                Hotseat Reservation
+              </h1>
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
+                <Sparkles size={13} /> Live Floor Map
+              </span>
+            </div>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Select any open workstation on the compact floor plan to reserve immediately.
+            </p>
+          </div>
 
-      <p className="text-sm text-slate-500 mb-5">
-        Book one hotseat for today or tomorrow, then check in during your expected arrival window.
-      </p>
+          {/* Quick Date Switcher Pills */}
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                if (isWeekend(today)) return;
+                setTargetDate(today);
+                setActive(null);
+                setBookingResult(null);
+              }}
+              disabled={isWeekend(today)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                targetDate === today
+                  ? "bg-white text-[#2F6FE0] shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              } ${isWeekend(today) ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              <Calendar size={14} />
+              <span>Today ({formatDate(today)})</span>
+            </button>
 
-      {/* FILTERS */}
-      <Card className="p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          <Select
-            step="1"
-            label="SELECT LOCATION"
-            required
-            value={location}
-            onChange={(v) => {
-              setLocation(v);
-              setModuleId("module1");
-              setActive(null);
-            }}
-            options={LOCATIONS}
-            placeholder="Select Location"
-          />
-
-          <Select
-            step="2"
-            label="SELECT OFFICE / ZONE"
-            required
-            value={zone}
-            onChange={(v) => {
-              setZone(v);
-              setModuleId("module1");
-              setActive(null);
-            }}
-            options={ZONES}
-            placeholder="Select Office"
-          />
-
-          <Select
-            step="3"
-            label="SELECT MODULE"
-            required
-            value={moduleId}
-            onChange={(v) => {
-              setModuleId(v);
-              setActive(null);
-            }}
-            options={readyForModule ? availableModuleOptions : []}
-            placeholder={readyForModule ? "Select Module" : "Choose Office First"}
-          />
-
-          <Select
-            step="4"
-            label="BOOKING DATE"
-            value={targetDate}
-            onChange={(value) => {
-              if (isWeekend(value)) return;
-              setTargetDate(value);
-              setActive(null);
-              setBookingResult(null);
-            }}
-            options={[
-              { value: today, label: formatDate(today) },
-              { value: tomorrow, label: formatDate(tomorrow) },
-            ]}
-            placeholder="Select date"
-          />
+            <button
+              type="button"
+              onClick={() => {
+                if (isWeekend(tomorrow)) return;
+                setTargetDate(tomorrow);
+                setActive(null);
+                setBookingResult(null);
+              }}
+              disabled={isWeekend(tomorrow)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                targetDate === tomorrow
+                  ? "bg-white text-[#2F6FE0] shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              } ${isWeekend(tomorrow) ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              <Calendar size={14} />
+              <span>Tomorrow ({formatDate(tomorrow)})</span>
+            </button>
+          </div>
         </div>
-      </Card>
 
-      {!readyForModule && (
-        <Card className="p-10 text-center text-sm text-slate-400">
-          Select a location and zone to load the Hotseat reservation.
-        </Card>
+        {/* Location & Module Selector Bars */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <MapPin size={13} className="text-slate-400" /> Office:
+            </span>
+
+            {/* Office pills */}
+            <button
+              type="button"
+              onClick={() => {
+                setZone("Elcot Park");
+                setModuleId("module1");
+                setActive(null);
+                setFilterSection("ALL");
+              }}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition border ${
+                zone === "Elcot Park"
+                  ? "bg-[#2F6FE0] text-white border-[#2F6FE0] shadow-sm"
+                  : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              Elcot Park
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setZone("Tidel Park");
+                setModuleId("module1");
+                setActive(null);
+                setFilterSection("ALL");
+              }}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition border ${
+                isTidelPark
+                  ? "bg-[#2F6FE0] text-white border-[#2F6FE0] shadow-sm"
+                  : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              Tidel Park
+            </button>
+          </div>
+
+          {/* Module Selector (for Elcot Park) */}
+          {!isTidelPark && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                <Building2 size={13} className="text-slate-400" /> Module:
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setModuleId("module1");
+                  setActive(null);
+                  setFilterSection("ALL");
+                }}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition border ${
+                  moduleId === "module1"
+                    ? "bg-slate-900 text-white border-slate-900"
+                    : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                Module 1 (98 Desks)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setModuleId("module2");
+                  setActive(null);
+                  setFilterSection("ALL");
+                }}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition border ${
+                  moduleId === "module2"
+                    ? "bg-slate-900 text-white border-slate-900"
+                    : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                Module 2 (131 Desks)
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 2. REAL-TIME STATS & USER ACTIVE BOOKING NOTIFICATION */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-3 shadow-sm">
+          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Desks</div>
+          <div className="text-xl font-black text-slate-800 mt-0.5">{totalSeats}</div>
+        </div>
+
+        <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/50 p-3 shadow-sm">
+          <div className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">Available Desks</div>
+          <div className="text-xl font-black text-emerald-700 mt-0.5">{availableCount}</div>
+        </div>
+
+        <div className="rounded-xl border border-red-200/80 bg-red-50/50 p-3 shadow-sm">
+          <div className="text-[11px] font-bold text-red-600 uppercase tracking-wider">Occupied Desks</div>
+          <div className="text-xl font-black text-red-700 mt-0.5">{occupiedCount}</div>
+        </div>
+
+        <div className="rounded-xl border border-sky-200/80 bg-sky-50/50 p-3 shadow-sm">
+          <div className="text-[11px] font-bold text-sky-600 uppercase tracking-wider">Availability Rate</div>
+          <div className="text-xl font-black text-sky-700 mt-0.5">{occupancyPercent}%</div>
+        </div>
+      </div>
+
+      {/* User's existing booking alert banner in current module */}
+      {myBookingForDate && (
+        <div className="rounded-xl border border-sky-300 dark:border-sky-800 bg-sky-50/80 dark:bg-sky-950/40 p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <div className="rounded-full bg-[#2F6FE0] p-1.5 text-white">
+              <UserCheck size={16} />
+            </div>
+            <div className="text-xs text-sky-950 dark:text-sky-200">
+              <span className="font-bold">Your Active Hotseat Reservation:</span>{" "}
+              <span className="font-mono font-bold bg-white dark:bg-slate-800 border border-sky-200 dark:border-sky-700 px-2 py-0.5 rounded text-sky-800 dark:text-sky-300">
+                Desk {myBookingForDate.seatNumber || myBookingForDate.seat}
+              </span>{" "}
+              on {formatDate(targetDate)} (Check-in: {myBookingForDate.expectedCheckInTime || myBookingForDate.expectedCheckIn || "10:00 AM"})
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setFilterSection("ALL");
+                const seatIdToFind = myBookingForDate.seatNumber || myBookingForDate.seat || myBookingForDate.seatId;
+                const cleanNum = String(seatIdToFind).split("-").pop().replace(/[^0-9]/g, "");
+
+                const mySeat = currentSeats.find((s) => s.isMyBooking) || currentSeats.find(s => normalizeSeat(s.id) === normalizeSeat(seatIdToFind) || String(s.number) === cleanNum);
+                if (mySeat) {
+                  handleSelectSeat(mySeat);
+                }
+
+                setTimeout(() => {
+                  const el =
+                    document.querySelector(`[data-seat-id="${seatIdToFind}"]`) ||
+                    document.getElementById(`seat-${seatIdToFind}`) ||
+                    document.querySelector(`[data-seat-num="${cleanNum}"]`);
+                  if (el) {
+                    el.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+                  }
+                }, 100);
+              }}
+              className="rounded-xl bg-[#2F6FE0] text-white px-3.5 py-1.5 text-xs font-bold hover:bg-blue-700 transition flex items-center gap-1.5 shadow-sm active:scale-95"
+            >
+              <MapPin size={13} />
+              <span>Locate My Desk</span>
+            </button>
+          </div>
+        </div>
       )}
 
-      {readyForModule && !currentModule && (
-        <Card className="p-10 text-center text-sm text-slate-400">
-          Select a module to view seats and rooms.
-        </Card>
-      )}
+      {/* User's existing booking alert banner in a different office or module */}
+      {!myBookingForDate && myGlobalBookingForDate && (() => {
+        const loc = getBookingLocation(myGlobalBookingForDate);
+        return (
+          <div className="rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50/80 dark:bg-amber-950/40 p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <div className="rounded-full bg-amber-600 p-1.5 text-white">
+                <AlertTriangle size={16} />
+              </div>
+              <div className="text-xs text-amber-950 dark:text-amber-200">
+                <span className="font-bold">Active Reservation in Another Module/Office:</span>{" "}
+                You have{" "}
+                <span className="font-mono font-bold bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-700 px-2 py-0.5 rounded text-amber-800 dark:text-amber-300">
+                  Desk {myGlobalBookingForDate.seatNumber || myGlobalBookingForDate.seat}
+                </span>{" "}
+                reserved at <span className="font-bold">{loc?.office} ({loc?.moduleLabel})</span> for {formatDate(targetDate)}.
+              </div>
+            </div>
 
-      {/* FLOOR MAP */}
-      {currentModule && (
-        <Card className="office-map-active p-6">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (loc?.office) setZone(loc.office);
+                  if (loc?.moduleId) setModuleId(loc.moduleId);
+                  setFilterSection("ALL");
+                  const seatIdToFind = myGlobalBookingForDate.seatNumber || myGlobalBookingForDate.seat || myGlobalBookingForDate.seatId;
+                  setTimeout(() => {
+                    const cleanNum = String(seatIdToFind).split("-").pop().replace(/[^0-9]/g, "");
+                    const el =
+                      document.querySelector(`[data-seat-id="${seatIdToFind}"]`) ||
+                      document.getElementById(`seat-${seatIdToFind}`) ||
+                      document.querySelector(`[data-seat-num="${cleanNum}"]`);
+                    if (el) {
+                      el.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+                    }
+                  }, 250);
+                }}
+                className="rounded-xl bg-amber-600 text-white px-3.5 py-1.5 text-xs font-bold hover:bg-amber-700 transition flex items-center gap-1.5 shadow-sm active:scale-95"
+              >
+                <MapPin size={13} />
+                <span>Switch & Locate Desk</span>
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* 3. FULL WIDTH INTERACTIVE FLOOR MAP */}
+      <div className="w-full rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-sm space-y-4">
+        {/* Map Controls Header: Section Switcher & Desk Search */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          {/* Section tabs */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 flex items-center gap-1">
+              <Layers size={13} /> View:
+            </span>
+            {sectionOptions.map((sec) => (
+              <button
+                key={sec.id}
+                type="button"
+                onClick={() => setFilterSection(sec.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                  filterSection === sec.id
+                    ? "bg-slate-900 text-white shadow-sm"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                {sec.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Quick seat search */}
+          <form onSubmit={handleSearch} className="relative shrink-0">
+            <input
+              type="text"
+              placeholder="Find desk # (e.g. 24)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-48 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-[#2F6FE0] focus:outline-none"
+            />
+            {searchQuery ? (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+              >
+                ✕
+              </button>
+            ) : (
+              <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            )}
+          </form>
+        </div>
+
+        {/* Full Width Floor Map Canvas */}
+        <div className="compact-map-canvas custom-scrollbar">
           {isTidelPark && moduleId === "module1" && (
             <FloorMapTidalParkModule1
               seats={currentSeats}
               onSelect={handleSelectSeat}
               activeSeatId={active?.id}
+              filterSection={filterSection}
             />
           )}
 
@@ -1213,6 +1698,7 @@ function OfficeMapTab({
               seats={currentSeats}
               onSelect={handleSelectSeat}
               activeSeatId={active?.id}
+              filterSection={filterSection}
             />
           )}
 
@@ -1221,373 +1707,283 @@ function OfficeMapTab({
               seats={currentSeats}
               onSelect={handleSelectSeat}
               activeSeatId={active?.id}
+              filterSection={filterSection}
             />
           )}
-
-          {/* BOOKING DIALOG */}
-          {active && (
-            <BookingDialog
-              item={active}
-              booking={
-                active.isMyBooking
-                  ? myBookingForDate
-                  : (myBookingForDate && normalizeSeat(myBookedSeatNumber) === normalizeSeat(active.id))
-                  ? myBookingForDate
-                  : bookings.find(
-                      (b) =>
-                        normalizeSeat(b.seatNumber || b.seat || b.seatId) === normalizeSeat(active.id) &&
-                        normalizeDateKey(b.bookingDate || b.date || b.expectedCheckIn) === targetDate &&
-                        b.status?.toLowerCase() !== "cancelled"
-                    )
-              }
-              currentModuleLabel={currentModule.label}
-              targetDate={targetDate}
-              onClose={() => setActive(null)}
-              onCreate={(details) =>
-                handleReserve(details.item, details.expectedCheckIn, details.date)
-              }
-              onUpdate={onEdit}
-              onCancel={onCancel}
-              onResult={(result) => {
-                setBookingResult(result);
-                if (result.ok) setActive(null);
-              }}
-            />
-          )}
-
-          {/* ERROR DISPLAY */}
-          {bookingResult && !bookingResult.ok && (
-            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-              {bookingResult.message}
-            </div>
-          )}
-
-          {/* SIMPLIFIED LEGEND */}
-          <div className="flex flex-wrap items-center gap-6 mt-4 text-[11px] font-semibold text-slate-600">
-            <span className="flex items-center gap-2">
-              <span
-                style={{
-                  background: "#22c55e",
-                  width: "12px",
-                  height: "12px",
-                  borderRadius: "3px",
-                  display: "inline-block",
-                }}
-              />
-              AVAILABLE
-            </span>
-
-            <span className="flex items-center gap-2">
-              <span
-                style={{
-                  background: "#2563eb",
-                  width: "12px",
-                  height: "12px",
-                  borderRadius: "3px",
-                  display: "inline-block",
-                }}
-              />
-              SELECTED
-            </span>
-
-            <span className="flex items-center gap-2">
-              <span
-                style={{
-                  background: "#ef4444",
-                  width: "12px",
-                  height: "12px",
-                  borderRadius: "3px",
-                  display: "inline-block",
-                }}
-              />
-              BOOKED
-            </span>
-
-            {/* Added Unavailable Legend Item */}
-            <span className="flex items-center gap-2">
-              <span
-                style={{
-                  background: "#94a3b8",
-                  border: "1px solid #64748b",
-                  width: "12px",
-                  height: "12px",
-                  borderRadius: "3px",
-                  display: "inline-block",
-                }}
-              />
-              UNAVAILABLE
-            </span>
-
-            <span className="ml-auto text-slate-400 font-normal">
-              Click an available seat to reserve
-            </span>
-
-          </div>
-        </Card>
-      )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Booking Dialog
-// ---------------------------------------------------------------------------
-
-function BookingDialog({
-  item,
-  booking,
-  currentModuleLabel,
-  targetDate,
-  onClose,
-  onCreate,
-  onUpdate,
-  onCancel,
-  onResult,
-}) {
-  const isEditing = Boolean(booking || item?.isMyBooking);
-
-  const [date, setDate] = useState(booking?.bookingDate || targetDate);
-
-  const getTimeString = (val) => {
-    if (!val) return "";
-    const str = String(val);
-    if (str.includes("T")) {
-      return str.split("T")[1].substring(0, 5);
-    }
-    return str.substring(0, 5);
-  };
-
-  const rawExistingTime = isEditing
-    ? (booking?.expectedCheckInTime || 
-       booking?.expectedCheckIn || 
-       booking?.startTime || 
-       booking?.time || 
-       "")
-    : "";
-
-  const [expectedCheckIn, setExpectedCheckIn] = useState(
-    getTimeString(rawExistingTime) || ""
-  );
-
-  const [confirmation, setConfirmation] = useState(null);
-  const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  function requestSave(event) {
-    event.preventDefault();
-    if (isWeekend(date)) {
-      setError("Hotseat bookings are not allowed on weekends.");
-      return;
-    }
-    if (!expectedCheckIn) {
-      setError("Please select a time.");
-      return;
-    }
-    setError("");
-    setConfirmation(isEditing ? "update" : "create");
-  }
-
-  async function confirm() {
-    if (saving) return;
-
-    setSaving(true);
-    setError("");
-
-    try {
-      let result;
-
-      if (confirmation === "create") {
-        result = await onCreate({ item, expectedCheckIn, date });
-      } else if (confirmation === "update") {
-        const bookingId = booking?.bookingId || booking?.id || booking?.hotseatBookingId;
-        result = await onUpdate(bookingId, {
-          date,
-          expectedCheckIn,
-          seatId: item.id,
-        });
-      } else {
-        const bookingId = booking?.bookingId || booking?.id || booking?.hotseatBookingId;
-        result = await onCancel(bookingId);
-      }
-
-      if (!result) {
-        result = { ok: false, message: "No response received from server." };
-      }
-
-      onResult?.(result);
-
-      if (!result.ok) {
-        setError(result.message || "Something went wrong.");
-        setConfirmation(null);
-      }
-    } catch (err) {
-      console.error("CONFIRM ERROR:", err);
-      setError("Something went wrong. Please try again.");
-      setConfirmation(null);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  useEffect(() => {
-    if (!confirmation) return;
-
-    function handleKeyDown(e) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        if (!saving) {
-          confirm();
-        }
-      } else if (e.key === "Escape") {
-        e.preventDefault();
-        if (!saving) {
-          setConfirmation(null);
-        }
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [confirmation, saving]);
-
-  return (
-    <Dialog
-      title={isEditing ? "Edit booking time" : "Book Hotseat"}
-      onClose={onClose}
-    >
-      {confirmation ? (
-        <div>
-          <p className="text-sm text-slate-600">
-            Are you sure you want to proceed?
-          </p>
-
-          <div className="mt-6 flex justify-end gap-3">
-            <button
-              type="button"
-              disabled={saving}
-              onClick={() => setConfirmation(null)}
-              className="rounded-lg px-4 py-2 text-sm text-slate-600 disabled:opacity-50"
-            >
-              Back
-            </button>
-
-            <button
-              type="button"
-              disabled={saving}
-              onClick={confirm}
-              className="rounded-lg bg-[#2F6FE0] px-4 py-2 text-sm text-white disabled:opacity-50"
-            >
-              {saving ? "Processing..." : "Confirm"}
-            </button>
-          </div>
         </div>
-      ) : (
-        <form onSubmit={requestSave}>
-          <div className="mb-4">
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-              Selected Hotseat
-            </label>
 
-            <div className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-medium text-slate-700">
-              {currentModuleLabel} · {item.id || item.label}
+        {/* Interactive Legend Footer */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-1.5 text-slate-700 font-medium">
+              <span className="h-4 w-4 rounded-[5px] bg-emerald-100 border border-emerald-500"></span>
+              <span>Available ({availableCount})</span>
             </div>
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-              Booking Date
-            </label>
-
-            <div className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-medium text-slate-700">
-              {formatDate(normalizeDateKey(date || targetDate))}
+            <div className="flex items-center gap-1.5 text-slate-600 font-medium">
+              <span className="h-4 w-4 rounded-[5px] bg-red-100 border border-red-300"></span>
+              <span>Booked ({occupiedCount})</span>
             </div>
-          </div>
-
-          <div className="mb-2">
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-              Expected check-in time
-            </label>
-
-            <ScrollableTimePicker
-              value={expectedCheckIn}
-              onChange={setExpectedCheckIn}
-              selectedDate={date}
-              placeholder="Select time"
-            />
-
-            <p className="mt-1 text-[11px] text-slate-500">
-              Operating hours: <span className="font-semibold text-slate-700">10:00 – 22:00</span>
-            </p>
-          </div>
-
-          {error && (
-            <p className="mt-3 text-sm text-red-600">{error}</p>
-          )}
-
-          <div className="mt-6 flex items-center justify-between gap-3">
-            {isEditing ? (
-              <button
-                type="button"
-                onClick={() => setConfirmation("cancel")}
-                className="text-sm font-semibold text-red-600"
-              >
-                Cancel Booking
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-lg px-3 py-2 text-sm text-slate-600"
-              >
-                Close
-              </button>
+            <div className="flex items-center gap-1.5 text-slate-700 font-medium">
+              <span className="h-4 w-4 rounded-[5px] bg-[#2F6FE0] border border-[#1e40af] shadow-sm"></span>
+              <span>Selected</span>
+            </div>
+            {myBookingForDate && (
+              <div className="flex items-center gap-1.5 text-slate-700 font-medium">
+                <span className="h-4 w-4 rounded-[5px] bg-indigo-600 border border-indigo-800 shadow-sm"></span>
+                <span>Your Desk</span>
+              </div>
             )}
-
-            <button
-              type="submit"
-              className="rounded-lg bg-[#2F6FE0] px-5 py-2 text-sm text-white"
-            >
-              {isEditing ? "Update Time" : "Book"}
-            </button>
+            <div className="flex items-center gap-1.5 text-slate-400 font-medium">
+              <span className="h-4 w-4 rounded-[5px] bg-slate-100 border border-dashed border-slate-300"></span>
+              <span>Unavailable</span>
+            </div>
           </div>
-        </form>
-      )}
-    </Dialog>
-  );
-}
 
-// ---------------------------------------------------------------------------
-// Dialog
-// ---------------------------------------------------------------------------
-
-function Dialog({ title, children, onClose }) {
-  useEffect(() => {
-    function handleKeyDown(e) {
-      if (e.key === "Escape" && onClose) {
-        e.preventDefault();
-        onClose();
-      }
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm p-4"
-      role="dialog"
-    >
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-        <div className="mb-5 flex items-start justify-between gap-4">
-          <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Close dialog">
-            <X size={20} />
-          </button>
+          <div className="text-xs text-slate-500 font-medium">
+            💡 Click any green desk to configure check-in time and reserve
+          </div>
         </div>
-        {children}
       </div>
+
+      {/* 4. CENTERED MODAL DIALOG (Appears when a desk is clicked, portaled directly to body) */}
+      {active &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/50 dark:bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-150"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setActive(null);
+                setBookingResult(null);
+                setCancelConfirming(false);
+              }
+            }}
+          >
+            <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 p-6 animate-in zoom-in-95 duration-150 text-slate-900 dark:text-white">
+              {/* Top Close Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setActive(null);
+                  setBookingResult(null);
+                  setCancelConfirming(false);
+                }}
+                className="absolute right-4 top-4 h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center text-sm font-bold transition"
+                aria-label="Close modal"
+              >
+                ✕
+              </button>
+
+              {/* STATE A: AVAILABLE DESK SELECTED */}
+              {active.status !== "occupied" && !active.isMyBooking && (
+                <div className="flex flex-col gap-5">
+                  {/* Header info */}
+                  <div className="flex items-center gap-3.5 pr-8">
+                    <div className="h-12 w-12 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 flex items-center justify-center text-emerald-700 dark:text-emerald-300 font-mono font-black text-base shadow-sm shrink-0">
+                      {active.number || active.id}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-slate-900 dark:text-white text-lg">
+                          {active.id || active.label}
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-850 px-2.5 py-0.5 text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                          <Check size={12} /> Available
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {zone} · {currentModule?.label} · {formatDate(targetDate)}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Time picker section */}
+                  <div className="rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 p-4 flex flex-col gap-3">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                      <Clock size={14} className="text-[#2F6FE0]" />
+                      Expected Check-In Time
+                    </label>
+
+                    {/* Quick Preset Buttons */}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {timePresets.map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setExpectedCheckIn(t)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition border ${
+                            expectedCheckIn === t
+                              ? "bg-[#2F6FE0] text-white border-[#2F6FE0] shadow-sm"
+                              : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-200 border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600"
+                          }`}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Custom Time Picker */}
+                    <div className="w-full mt-1">
+                      <ScrollableTimePicker
+                        value={expectedCheckIn}
+                        onChange={setExpectedCheckIn}
+                        selectedDate={targetDate}
+                        placeholder="Select Time"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Conflict warning or error */}
+                  {bookingResult && !bookingResult.ok && (
+                    <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 p-3 text-xs text-red-700 dark:text-red-300 font-medium">
+                      {bookingResult.message}
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActive(null);
+                        setBookingResult(null);
+                      }}
+                      className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold transition"
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="button"
+                      autoFocus
+                      disabled={isSubmitting}
+                      onClick={handleConfirmReserve}
+                      className="px-5 py-2.5 rounded-xl bg-[#2F6FE0] hover:bg-blue-700 text-white text-xs font-bold shadow-md disabled:opacity-50 transition flex items-center gap-1.5 focus:ring-2 focus:ring-blue-400"
+                    >
+                      {isSubmitting ? "Booking..." : `Confirm Reservation`}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* STATE B: USER'S OWN BOOKED DESK SELECTED */}
+              {active.isMyBooking && (
+                <div className="flex flex-col gap-5">
+                  <div className="flex items-center gap-3.5 pr-8">
+                    <div className="h-12 w-12 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 border border-indigo-300 dark:border-indigo-800 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-mono font-black text-base shadow-sm shrink-0">
+                      {active.number || active.id}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-slate-900 dark:text-white text-lg">
+                          Desk {active.id || active.label}
+                        </span>
+                        <span className="rounded-full bg-indigo-600 px-2.5 py-0.5 text-xs font-bold text-white">
+                          Your Reservation
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {zone} · {currentModule?.label} · {formatDate(targetDate)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900 p-4">
+                    <div className="text-xs font-bold text-indigo-950 dark:text-indigo-200 mb-1">
+                      Booking Details
+                    </div>
+                    <div className="text-xs text-indigo-700 dark:text-indigo-300">
+                      Check-in time: <b>{myBookingForDate?.expectedCheckInTime || "10:00 AM"}</b>
+                    </div>
+                  </div>
+
+                  {/* Cancel or Keep options */}
+                  <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    {cancelConfirming ? (
+                      <div className="flex items-center gap-2 w-full justify-between">
+                        <span className="text-xs font-bold text-red-700 dark:text-red-400">Confirm cancellation?</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            disabled={isSubmitting}
+                            onClick={handleCancelActiveBooking}
+                            className="px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition"
+                          >
+                            {isSubmitting ? "Releasing..." : "Yes, Release Desk"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCancelConfirming(false)}
+                            className="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                          >
+                            Keep
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setCancelConfirming(true)}
+                          className="px-4 py-2.5 rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 text-xs font-bold transition"
+                        >
+                          Cancel Reservation
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActive(null)}
+                          className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold transition"
+                        >
+                          Close
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* STATE C: OCCUPIED DESK */}
+              {active.status === "occupied" && !active.isMyBooking && (
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-3.5 pr-8">
+                    <div className="h-12 w-12 rounded-xl bg-red-100 dark:bg-red-950/60 border border-red-300 dark:border-red-800 flex items-center justify-center text-red-700 dark:text-red-300 font-mono font-black text-base shadow-sm shrink-0">
+                      {active.number || active.id}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-slate-900 dark:text-white text-lg">
+                          Desk {active.id || active.label}
+                        </span>
+                        <span className="rounded-full bg-red-600 px-2.5 py-0.5 text-xs font-bold text-white">
+                          Occupied
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {zone} · {currentModule?.label} · {formatDate(targetDate)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900 p-3.5 text-xs text-red-700 dark:text-red-300 leading-relaxed">
+                    This desk is already reserved by another team member for {formatDate(targetDate)}. Please select any available green desk on the floor map.
+                  </div>
+
+                  <div className="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button
+                      type="button"
+                      autoFocus
+                      onClick={() => setActive(null)}
+                      className="px-5 py-2.5 rounded-xl bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white text-xs font-bold transition"
+                    >
+                      Got it
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
-}
+}

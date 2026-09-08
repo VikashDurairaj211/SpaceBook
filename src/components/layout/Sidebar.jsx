@@ -139,28 +139,28 @@ export default function Sidebar({ collapsed = true, modules = [], bookings = [] 
   }, [])
 
   return (
-    <aside className={`hidden md:fixed md:top-14 md:left-0 md:h-[calc(100%-3.5rem)] md:overflow-y-auto md:flex md:flex-col border-r border-sky-200 bg-sky-50/60 transition-all duration-200 ${widthClass}`}>
-      <div className="px-4 py-4 space-y-6">
+    <aside className={`hidden md:fixed md:top-14 md:left-0 md:h-[calc(100%-3.5rem)] md:overflow-y-auto md:flex md:flex-col border-r border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/95 backdrop-blur-md transition-all duration-200 shadow-2xs ${widthClass}`}>
+      <div className="px-3.5 py-4 space-y-5">
         {/* Show workspace menu & widgets for non-admin users */}
         {!isAdmin && (
           <>
             <div>
-              <p className={`mb-2 font-mono text-[11px] uppercase tracking-[0.25em] text-sky-800/70 ${collapsed ? 'hidden' : 'block'}`}>Workspace</p>
-              <ul className="space-y-1.5">
+              <p className={`mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 px-2 ${collapsed ? 'hidden' : 'block'}`}>Workspace</p>
+              <ul className="space-y-1">
                 {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
                   <li key={to}>
                     <NavLink
                       to={to}
                       end={end}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 rounded-full px-4 py-2.5 text-sm transition-all duration-200 ${isActive
-                          ? 'bg-sky-600 text-white font-medium shadow-sm'
-                          : 'text-sky-950 hover:bg-sky-200/60 hover:text-sky-900'
+                        `flex items-center gap-3 rounded-xl px-3 py-2 text-xs transition-all duration-200 ${isActive
+                          ? 'bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-bold shadow-sm shadow-sky-500/20'
+                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white font-semibold'
                         } ${collapsed ? 'justify-center px-2' : ''}`
                       }
                     >
-                      <Icon size={18} />
-                      {!collapsed && <span>{label}</span>}
+                      <Icon size={16} className="shrink-0" />
+                      {!collapsed && <span className="truncate">{label}</span>}
                     </NavLink>
                   </li>
                 ))}
@@ -168,22 +168,22 @@ export default function Sidebar({ collapsed = true, modules = [], bookings = [] 
             </div>
 
             {!collapsed && (
-              <div className="pt-2 space-y-4">
+              <div className="pt-2 space-y-3">
                 {/* Facility Overview Card */}
-                <div className="rounded-2xl border border-sky-200 bg-white p-3.5 shadow-sm space-y-2">
+                <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-800/90 p-3 shadow-card space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-sky-800">
-                      Facility Overview
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Facility Guide
                     </span>
-                    <Building2 size={14} className="text-sky-600" />
+                    <Building2 size={13} className="text-sky-600 dark:text-sky-400" />
                   </div>
 
-                  <div className="space-y-2 pt-1">
+                  <div className="space-y-1.5 pt-0.5">
                     {dynamicOverview.map((item) => (
-                      <div key={item.type} className="text-[11px] leading-snug">
-                        <p className="font-bold text-sky-950">{item.type}</p>
-                        <p className="text-slate-600">
-                          {item.capacity} {item.facilities}
+                      <div key={item.type} className="text-[10.5px] leading-tight">
+                        <p className="font-bold text-slate-800 dark:text-slate-100">{item.type}</p>
+                        <p className="text-slate-600 dark:text-slate-300 text-[10px]">
+                          {item.capacity} <span className="text-slate-500 dark:text-slate-400">{item.facilities}</span>
                         </p>
                       </div>
                     ))}
@@ -191,24 +191,24 @@ export default function Sidebar({ collapsed = true, modules = [], bookings = [] 
                 </div>
 
                 {/* Office Policy Card */}
-                <div className="rounded-2xl border border-sky-200 bg-white p-3 shadow-xs space-y-1.5">
+                <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-800/90 p-3 shadow-card space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-sky-800">
-                      <Clock size={13} className="text-sky-600 shrink-0" />
+                    <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                      <Clock size={13} className="text-sky-600 dark:text-sky-400 shrink-0" />
                       <span className="font-mono text-[10px] font-bold uppercase tracking-wider">
                         Office Policy
                       </span>
                     </div>
-                    <span className="text-[9px] text-sky-800 font-semibold bg-sky-100 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
-                      Active Hours
+                    <span className="text-[9px] text-emerald-700 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-700/60 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
+                      Active
                     </span>
                   </div>
 
                   <div className="pt-0.5">
-                    <span className="text-xs font-bold text-sky-950 block whitespace-nowrap">10:00 - 22:00 IST</span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white block whitespace-nowrap">10:00 - 22:00 IST</span>
                   </div>
-                  <p className="text-[10.5px] text-sky-900/70 leading-snug">
-                    Ensure standard room reservations comply with operational office time slots.
+                  <p className="text-[10px] text-slate-600 dark:text-slate-300 leading-snug">
+                    Standard room reservations comply with operational office time slots.
                   </p>
                 </div>
               </div>
@@ -219,47 +219,47 @@ export default function Sidebar({ collapsed = true, modules = [], bookings = [] 
         {/* Show admin menu & Office Policy card for admin users */}
         {isAdmin && (
           <div>
-            <p className={`mb-2 font-mono text-[11px] uppercase tracking-[0.25em] text-sky-800/70 ${collapsed ? 'hidden' : 'block'}`}>Admin</p>
-            <ul className="space-y-1.5">
+            <p className={`mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 px-2 ${collapsed ? 'hidden' : 'block'}`}>Admin Portal</p>
+            <ul className="space-y-1">
               {ADMIN_ITEMS.map(({ to, label, icon: Icon }) => (
                 <li key={to}>
                   <NavLink
                     to={to}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-full px-4 py-2.5 text-sm transition-all duration-200 ${isActive
-                        ? 'bg-sky-600 text-white font-medium shadow-sm'
-                        : 'text-sky-950 hover:bg-sky-200/60 hover:text-sky-900'
+                      `flex items-center gap-3 rounded-xl px-3 py-2 text-xs transition-all duration-200 ${isActive
+                        ? 'bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-bold shadow-sm shadow-sky-500/20'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white font-semibold'
                       } ${collapsed ? 'justify-center px-2' : ''}`
                     }
                   >
-                    <Icon size={18} />
-                    {!collapsed && <span>{label}</span>}
+                    <Icon size={16} className="shrink-0" />
+                    {!collapsed && <span className="truncate">{label}</span>}
                   </NavLink>
                 </li>
               ))}
             </ul>
 
             {!collapsed && (
-              <div className="mt-6 pt-2 space-y-4">
+              <div className="mt-5 space-y-3">
                 {/* Office Policy Card for Admin */}
-                <div className="rounded-2xl border border-sky-200 bg-white p-3 shadow-xs space-y-1.5">
+                <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-800/90 p-3 shadow-card space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-sky-800">
-                      <Clock size={13} className="text-sky-600 shrink-0" />
+                    <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                      <Clock size={13} className="text-sky-600 dark:text-sky-400 shrink-0" />
                       <span className="font-mono text-[10px] font-bold uppercase tracking-wider">
                         Office Policy
                       </span>
                     </div>
-                    <span className="text-[9px] text-sky-800 font-semibold bg-sky-100 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
-                      Active Hours
+                    <span className="text-[9px] text-emerald-700 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-700/60 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
+                      Active
                     </span>
                   </div>
 
                   <div className="pt-0.5">
-                    <span className="text-xs font-bold text-sky-950 block whitespace-nowrap">10:00 - 22:00 IST</span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white block whitespace-nowrap">10:00 - 22:00 IST</span>
                   </div>
-                  <p className="text-[10.5px] text-sky-900/70 leading-snug">
-                    Ensure standard room reservations comply with operational office time slots.
+                  <p className="text-[10px] text-slate-600 dark:text-slate-300 leading-snug">
+                    Standard room reservations comply with operational office time slots.
                   </p>
                 </div>
               </div>

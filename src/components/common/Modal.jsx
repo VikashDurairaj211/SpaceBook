@@ -73,14 +73,14 @@ export default function Modal({
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div
         ref={modalRef}
-        className={`relative w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl ${className}`}
+        className={`relative w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-xl ${className}`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-line pb-4">
-          <h3 className="font-display text-lg font-bold text-ink">
+        <div className="flex items-center justify-between border-b border-line dark:border-slate-800 pb-4">
+          <h3 className="font-display text-lg font-bold text-ink dark:text-white">
             {title}
           </h3>
 
@@ -88,7 +88,7 @@ export default function Modal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-1 text-slate hover:bg-portal-bg hover:text-ink"
+              className="rounded-lg p-1 text-slate dark:text-slate-400 hover:bg-portal-bg dark:hover:bg-slate-800 hover:text-ink dark:hover:text-white"
             >
               ✕
             </button>
@@ -96,11 +96,11 @@ export default function Modal({
         </div>
 
         {/* Content */}
-        <div className="py-4">{children}</div>
+        <div className="py-4 text-slate-800 dark:text-slate-200">{children}</div>
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 border-t border-line pt-4">
+          <div className="flex items-center justify-end gap-3 border-t border-line dark:border-slate-800 pt-4">
             {footer}
           </div>
         )}

@@ -4,58 +4,433 @@
 
 @layer base {
   :root {
-    --neutralShadowAmbient: rgba(0, 0, 0, 0.12);
-    --neutralShadowAmbientDarker: rgba(0, 0, 0, 0.2);
-    --neutralShadowKey: rgba(0, 0, 0, 0.14);
-    --neutralShadowKeyDarker: rgba(0, 0, 0, 0.24);
-    --shadow4: 0px 0px 2px var(--neutralShadowAmbient), 0px 2px 4px var(--neutralShadowKey);
-    --shadow8: 0px 0px 2px var(--neutralShadowAmbient), 0px 4px 8px var(--neutralShadowKey);
-    --shadow16: 0px 0px 2px var(--neutralShadowAmbient), 0px 8px 16px var(--neutralShadowKey);
-    --shadow64: 0px 0px 8px var(--neutralShadowAmbientDarker), 0px 32px 64px var(--neutralShadowKeyDarker);
+    --neutralShadowAmbient: rgba(0, 0, 0, 0.08);
+    --neutralShadowAmbientDarker: rgba(0, 0, 0, 0.16);
+    --neutralShadowKey: rgba(0, 0, 0, 0.1);
+    --neutralShadowKeyDarker: rgba(0, 0, 0, 0.2);
+    --shadow4: 0px 2px 4px rgba(0, 0, 0, 0.04), 0px 1px 2px rgba(0, 0, 0, 0.06);
+    --shadow8: 0px 4px 12px rgba(0, 0, 0, 0.06), 0px 2px 4px rgba(0, 0, 0, 0.04);
+    --shadow16: 0px 12px 24px -4px rgba(0, 0, 0, 0.08), 0px 4px 8px -2px rgba(0, 0, 0, 0.04);
+    --shadow64: 0px 24px 48px -12px rgba(0, 0, 0, 0.15);
 
-    --cornerRadius20: 2px;
-    --cornerRadius40: 4px;
-    --cornerRadius80: 8px;
-
-    --colorNeutralForeground1: #201F1E;
-    --colorNeutralForeground2: #3B3A39;
+    --colorNeutralForeground1: #0F172A;
+    --colorNeutralForeground2: #334155;
     --colorNeutralBackground1: #ffffff;
-    --colorNeutralBackground1Hover: #EDEBE9;
+    --colorNeutralBackground1Hover: #F8FAFC;
 
-    --fontFamilyBase: '"Segoe UI Variable"', '"Segoe UI"', 'sans-serif';
-    --fontWeightRegular: 400;
-    --fontWeightMedium: 400;
-    --fontWeightSemibold: 600;
-    --fontWeightBold: 800;
+    --fontFamilyBase: '"Plus Jakarta Sans"', '"Segoe UI"', sans-serif;
+    --fontFamilyMono: '"JetBrains Mono"', monospace;
+  }
 
-    --fontSizeBase200: 12px;
-    --lineHeightBase200: 18px;
+  .dark {
+    --colorNeutralForeground1: #F8FAFC;
+    --colorNeutralForeground2: #94A3B8;
+    --colorNeutralBackground1: #0F172A;
+    --colorNeutralBackground1Hover: #1E293B;
   }
 
   body {
-    @apply bg-portal-bg;
+    background-color: #f8fafc;
+    color: #1e293b;
     font-family: var(--fontFamilyBase);
-    font-style: normal;
-    font-variant: normal;
-    font-weight: 400;
-    font-size: 12px;
-    color: var(--colorNeutralForeground1);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  .dark body {
+    background-color: #0b1329;
+    color: #e2e8f0;
   }
 
   body, button, input, select, table, textarea {
-    font-style: normal;
-    font-variant: normal;
-    font-weight: 400;
-    font-size: 12px;
     font-family: var(--fontFamilyBase);
-    color: var(--colorNeutralForeground1);
   }
 
   ::selection {
-    background-color: theme('colors.portal-accent');
-    color: #F7F5F1;
+    background-color: #2563EB;
+    color: #ffffff;
   }
+}
+
+/* ==========================================================================
+   COMPREHENSIVE GLOBAL DARK THEME LAYER
+   Transforms all surfaces, typography, forms, tables, and cards seamlessly
+   ========================================================================== */
+
+.dark {
+  color-scheme: dark;
+}
+
+/* 1. Surface Overrides */
+.dark .bg-white,
+.dark .bg-white\/5,
+.dark .bg-white\/10,
+.dark .bg-white\/20,
+.dark .bg-white\/30,
+.dark .bg-white\/40,
+.dark .bg-white\/50,
+.dark .bg-white\/60,
+.dark .bg-white\/70,
+.dark .bg-white\/75,
+.dark .bg-white\/80,
+.dark .bg-white\/85,
+.dark .bg-white\/90,
+.dark .bg-white\/95 {
+  background-color: #0f172a !important;
+}
+
+.dark .bg-slate-50,
+.dark .bg-slate-50\/40,
+.dark .bg-slate-50\/50,
+.dark .bg-slate-50\/60,
+.dark .bg-slate-50\/80,
+.dark .bg-slate-100,
+.dark .bg-slate-100\/80,
+.dark .bg-slate-100\/50 {
+  background-color: #1e293b !important;
+}
+
+.dark .bg-sky-50,
+.dark .bg-sky-50\/40,
+.dark .bg-sky-50\/50,
+.dark .bg-sky-50\/80 {
+  background-color: rgba(14, 165, 233, 0.12) !important;
+}
+
+.dark .bg-indigo-50,
+.dark .bg-indigo-50\/40,
+.dark .bg-indigo-50\/60,
+.dark .bg-indigo-50\/80 {
+  background-color: rgba(99, 102, 241, 0.12) !important;
+}
+
+.dark .bg-emerald-50,
+.dark .bg-emerald-50\/60,
+.dark .bg-emerald-50\/80 {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+}
+
+.dark .bg-amber-50,
+.dark .bg-amber-50\/60,
+.dark .bg-amber-50\/80,
+.dark .bg-amber-50\/90 {
+  background-color: rgba(245, 158, 11, 0.14) !important;
+}
+
+.dark .bg-red-50,
+.dark .bg-rose-50 {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+}
+
+/* Gradient Stops in Dark Mode */
+.dark .from-white {
+  --tw-gradient-from: #0f172a var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(15, 23, 42, 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.dark .via-white {
+  --tw-gradient-to: rgba(15, 23, 42, 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #1e293b var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+}
+
+.dark .to-white {
+  --tw-gradient-to: #0f172a var(--tw-gradient-to-position) !important;
+}
+
+.dark .from-slate-50,
+.dark .from-slate-50\/40,
+.dark .from-slate-50\/50,
+.dark .from-slate-50\/60,
+.dark .from-slate-50\/80 {
+  --tw-gradient-from: #1e293b var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(30, 41, 59, 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.dark .via-slate-50,
+.dark .via-slate-50\/40,
+.dark .via-slate-50\/50,
+.dark .via-slate-50\/60 {
+  --tw-gradient-to: rgba(30, 41, 59, 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #1e293b var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+}
+
+.dark .to-slate-50,
+.dark .to-slate-50\/40,
+.dark .to-slate-50\/50,
+.dark .to-slate-50\/60 {
+  --tw-gradient-to: #1e293b var(--tw-gradient-to-position) !important;
+}
+
+.dark .from-sky-50,
+.dark .from-sky-50\/40,
+.dark .from-sky-50\/50,
+.dark .from-sky-50\/60 {
+  --tw-gradient-from: #0f172a var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(15, 23, 42, 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.dark .via-sky-50,
+.dark .via-sky-50\/40,
+.dark .via-sky-50\/50,
+.dark .via-sky-50\/60 {
+  --tw-gradient-to: rgba(15, 23, 42, 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), rgba(14, 165, 233, 0.15) var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+}
+
+.dark .to-sky-50,
+.dark .to-sky-50\/40,
+.dark .to-sky-50\/50,
+.dark .to-sky-50\/60 {
+  --tw-gradient-to: #0f172a var(--tw-gradient-to-position) !important;
+}
+
+.dark .from-indigo-50,
+.dark .from-indigo-50\/40,
+.dark .to-indigo-50,
+.dark .to-indigo-50\/40 {
+  --tw-gradient-to: #0f172a var(--tw-gradient-to-position) !important;
+}
+
+.dark .from-amber-50,
+.dark .from-amber-50\/60,
+.dark .to-amber-50,
+.dark .to-amber-50\/40 {
+  --tw-gradient-from: #1e293b var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: #0f172a var(--tw-gradient-to-position) !important;
+}
+
+/* 2. Text Color Overrides */
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-slate-950,
+.dark .text-ink {
+  color: #f8fafc !important;
+}
+
+.dark .text-slate-700,
+.dark .text-slate-600 {
+  color: #e2e8f0 !important;
+}
+
+.dark .text-slate-500,
+.dark .text-slate-400,
+.dark .text-slate {
+  color: #94a3b8 !important;
+}
+
+.dark .text-sky-950,
+.dark .text-sky-900,
+.dark .text-sky-800,
+.dark .text-sky-700,
+.dark .text-sky-600 {
+  color: #38bdf8 !important;
+}
+
+.dark .text-indigo-950,
+.dark .text-indigo-900,
+.dark .text-indigo-800,
+.dark .text-indigo-700,
+.dark .text-indigo-600 {
+  color: #a5b4fc !important;
+}
+
+.dark .text-emerald-950,
+.dark .text-emerald-900,
+.dark .text-emerald-800,
+.dark .text-emerald-700,
+.dark .text-emerald-600 {
+  color: #6ee7b7 !important;
+}
+
+.dark .text-amber-950,
+.dark .text-amber-900,
+.dark .text-amber-800,
+.dark .text-amber-700,
+.dark .text-amber-600 {
+  color: #fcd34d !important;
+}
+
+.dark .text-rose-700,
+.dark .text-rose-600,
+.dark .text-red-700,
+.dark .text-red-600 {
+  color: #fca5a5 !important;
+}
+
+/* 3. Border & Divider Overrides */
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-slate-200\/60,
+.dark .border-slate-200\/80,
+.dark .border-slate-200\/85,
+.dark .border-slate-200\/90,
+.dark .border-slate-300,
+.dark .border-line,
+.dark hr {
+  border-color: #334155 !important;
+}
+
+.dark .border-sky-100,
+.dark .border-sky-200,
+.dark .border-sky-200\/80,
+.dark .border-sky-300 {
+  border-color: rgba(56, 189, 248, 0.28) !important;
+}
+
+.dark .border-indigo-100,
+.dark .border-indigo-200,
+.dark .border-indigo-200\/80,
+.dark .border-indigo-300 {
+  border-color: rgba(129, 140, 248, 0.28) !important;
+}
+
+.dark .border-emerald-100,
+.dark .border-emerald-200 {
+  border-color: rgba(52, 211, 153, 0.28) !important;
+}
+
+.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-slate-200\/80 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #334155 !important;
+}
+
+/* 4. Form Controls (Inputs, Selects, Dropdowns) */
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+.dark select,
+.dark textarea {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+.dark select option {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+.dark select optgroup {
+  background-color: #0b1329 !important;
+  color: #38bdf8 !important;
+}
+
+/* 5. Tables & Grids */
+.dark table {
+  border-color: #334155 !important;
+}
+
+.dark table thead th {
+  background-color: #1e293b !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+
+.dark table tbody tr {
+  background-color: #0f172a !important;
+  border-bottom-color: #334155 !important;
+}
+
+.dark table tbody tr:hover {
+  background-color: #1e293b !important;
+}
+
+.dark table tbody td {
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+/* 6. Cards & Modals Shadows */
+.dark .shadow-card,
+.dark .shadow-sm,
+.dark .shadow-md,
+.dark .shadow-lg,
+.dark .shadow-xl,
+.dark .shadow-2xl {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.55), 0 2px 6px -1px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* 7. Badges & Chips */
+.dark .bg-sky-100 {
+  background-color: rgba(14, 165, 233, 0.22) !important;
+}
+.dark .bg-indigo-100 {
+  background-color: rgba(99, 102, 241, 0.22) !important;
+}
+.dark .bg-emerald-100 {
+  background-color: rgba(16, 185, 129, 0.22) !important;
+}
+.dark .bg-amber-100 {
+  background-color: rgba(245, 158, 11, 0.22) !important;
+}
+
+/* 8. Hotseat Desk Map in Dark Mode */
+.dark .seat-legend-box.vacant {
+  border: 1.5px solid #38bdf8 !important;
+  background-color: #1e293b !important;
+}
+
+.dark .seat-legend-box.occupied {
+  background-color: #475569 !important;
+}
+
+.dark .seat-legend-box.reserved {
+  border: 1.5px solid #f59e0b !important;
+  background-color: rgba(245, 158, 11, 0.25) !important;
+}
+
+/* 9. Dark Scrollbar */
+.dark ::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* 10. Recharts SVG Analytics Charts Dark Mode Support */
+.dark .recharts-cartesian-grid line {
+  stroke: #334155 !important;
+}
+
+.dark .recharts-cartesian-axis-line,
+.dark .recharts-cartesian-axis-tick line {
+  stroke: #334155 !important;
+}
+
+.dark .recharts-text,
+.dark .recharts-cartesian-axis-tick-value {
+  fill: #94a3b8 !important;
+  color: #94a3b8 !important;
+}
+
+.dark .recharts-legend-item-text,
+.dark .recharts-default-legend .recharts-legend-item-text {
+  color: #cbd5e1 !important;
+  fill: #cbd5e1 !important;
+}
+
+.dark .recharts-tooltip-cursor {
+  fill: rgba(255, 255, 255, 0.05) !important;
+  stroke: rgba(56, 189, 248, 0.4) !important;
 }
 
 @layer components {
@@ -71,8 +446,6 @@
     position: absolute;
     inset: 0;
     z-index: -2;
-    /* Assign --portal-login-background to url('/calendar-background.jpg') once
-       the supplied calendar image is added to the public folder. */
     background: var(--portal-login-background, linear-gradient(135deg, #30444d, #1f333d)) center / cover no-repeat;
   }
 
@@ -117,10 +490,6 @@
   }
 }
 
-/* ==========================================================================
-   Hot Seat Map & Floor Plan Styles
-   ========================================================================== */
-
 .seat-legend-box {
   display: inline-block;
   width: 14px;
@@ -153,4 +522,4 @@
 
 .hotseat-main {
   width: 100%;
-}
+}

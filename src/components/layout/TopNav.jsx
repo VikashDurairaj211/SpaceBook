@@ -8,9 +8,12 @@ import {
   X,
   HelpCircle,
   BookOpen,
+  Sun,
+  Moon,
 } from 'lucide-react'
 
 import { useAuth } from '../../context/AuthContext'
+import { useTheme } from '../../context/ThemeContext'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useState, useMemo, useRef, useEffect } from 'react'
 
@@ -29,6 +32,7 @@ export default function TopNav({
   publicOnly = false,
 }) {
   const { user, logout } = useAuth()
+  const { theme, isDark, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -46,6 +50,28 @@ export default function TopNav({
 
   const notificationButtonRef = useRef(null)
   const searchContainerRef = useRef(null)
+  const searchInputRef = useRef(null)
+
+  // =====================================================
+  // Global Keyboard Shortcut: Ctrl + K (or Cmd + K) to focus search
+  // =====================================================
+
+  useEffect(() => {
+    function handleGlobalKeyDown(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        if (searchInputRef.current) {
+          searchInputRef.current.focus()
+          searchInputRef.current.select()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleGlobalKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown)
+    }
+  }, [])
 
   // =====================================================
   // Determine whether logged-in user is Admin
@@ -683,7 +709,7 @@ export default function TopNav({
   // =====================================================
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 flex h-[52px] items-center justify-between border-b border-sky-200 bg-sky-100 px-4 shadow-sm">
+    <header className="fixed top-0 left-0 right-0 z-40 flex h-[52px] items-center justify-between border-b border-slate-200/80 dark:border-slate-800 bg-white/85 dark:bg-slate-900/90 backdrop-blur-md px-4 shadow-xs transition-all">
 
       {/* =================================================
           LEFT SIDE
@@ -694,7 +720,7 @@ export default function TopNav({
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="mr-3 rounded-lg p-1.5 text-sky-900 transition hover:bg-sky-200"
+            className="mr-3 rounded-xl p-1.5 text-slate-700 dark:text-slate-300 transition-all hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
             aria-label={
               sidebarCollapsed
                 ? 'Open sidebar'
@@ -710,7 +736,7 @@ export default function TopNav({
         )}
 
         <div
-          className="flex cursor-pointer items-center gap-2"
+          className="flex cursor-pointer items-center gap-2.5 transition-transform hover:scale-[1.02]"
           onClick={() =>
             navigate(
               isAdmin
@@ -722,11 +748,11 @@ export default function TopNav({
           <img
             src="/Logo.png"
             alt="SpaceBook"
-            className="h-7 w-7 object-contain"
+            className="h-7 w-7 object-contain drop-shadow-xs"
           />
 
-          <span className="hidden font-display text-base font-bold text-sky-950 sm:block">
-            SPACEBOOK
+          <span className="hidden font-display text-base font-extrabold tracking-tight text-slate-900 dark:text-white sm:block">
+            SPACE<span className="text-sky-600">BOOK</span>
           </span>
         </div>
       </div>
@@ -741,22 +767,23 @@ export default function TopNav({
           onSubmit={handleSearchSubmit}
           className="relative mx-6 hidden max-w-sm flex-1 md:flex"
         >
-          <div className="flex w-full items-center gap-2 rounded-lg border border-sky-300 bg-white/60 px-3 py-1 focus-within:border-sky-500">
+          <div className="flex w-full items-center gap-2 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-800/80 px-3 py-1.5 focus-within:bg-white dark:focus-within:bg-slate-800 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-500/10 shadow-xs transition-all">
 
             <button
               type="submit"
-              className="text-sky-900 transition-opacity hover:opacity-80"
+              className="text-slate-500 transition-colors hover:text-sky-600 shrink-0"
               aria-label="Search"
             >
               <Search
                 size={14}
-                className="text-sky-900"
+                className="text-slate-400"
               />
             </button>
 
             <input
+              ref={searchInputRef}
               type="text"
-              placeholder="Search rooms, bookings..."
+              placeholder="Search workspaces, bookings..."
               value={searchInput}
               onChange={(event) => {
                 setSearchInput(event.target.value)
@@ -769,18 +796,22 @@ export default function TopNav({
                   setShowSearchResults(true)
                 }
               }}
-              className="w-full bg-transparent text-xs font-sans text-sky-950 outline-none placeholder:text-sky-700/60"
+              className="w-full min-w-0 bg-transparent text-xs font-sans text-slate-800 dark:text-slate-100 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 font-medium"
             />
 
-            {searchInput && (
+            {searchInput ? (
               <button
                 type="button"
                 onClick={handleClearSearch}
-                className="rounded-full p-0.5 text-sky-700/60 transition hover:bg-sky-200 hover:text-sky-950"
+                className="shrink-0 rounded-full p-0.5 text-slate-400 transition hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200"
                 aria-label="Clear search"
               >
                 <X size={13} />
               </button>
+            ) : (
+              <span className="hidden sm:inline-flex shrink-0 whitespace-nowrap items-center font-mono text-[10px] font-semibold text-slate-400 dark:text-slate-400 bg-white dark:bg-slate-700/80 border border-slate-200 dark:border-slate-600 px-1.5 py-0.5 rounded-md shadow-2xs select-none pointer-events-none">
+                Ctrl + K
+              </span>
             )}
           </div>
 
@@ -849,7 +880,7 @@ export default function TopNav({
 
           <a
             href="https://vmivsp.sharepoint.com"
-            className="rounded-lg p-1.5 text-sky-900 transition hover:bg-sky-200"
+            className="rounded-xl p-1.5 text-slate-600 dark:text-slate-300 transition-all hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
             aria-label="SharePoint Home"
           >
             <Home size={16} />
@@ -869,13 +900,13 @@ export default function TopNav({
 
                 setMenuOpen(false)
               }}
-              className="relative rounded-lg p-1.5 text-sky-900 hover:bg-sky-200"
+              className="relative rounded-xl p-1.5 text-slate-600 dark:text-slate-300 transition-all hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
               aria-label="Notifications"
             >
               <Bell size={16} />
 
               {unreadCount > 0 && (
-                <span className="pointer-events-none absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[9px] font-semibold text-white">
+                <span className="pointer-events-none absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white ring-2 ring-white dark:ring-slate-900">
                   {unreadCount}
                 </span>
               )}
@@ -914,12 +945,27 @@ export default function TopNav({
           <button
             type="button"
             onClick={() => window.dispatchEvent(new Event('openSpaceBookGuide'))}
-            className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-sky-900 border border-sky-300/80 bg-white/70 hover:bg-sky-200/80 hover:border-sky-400 transition shadow-xs"
+            className="flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 transition-all shadow-xs"
             title="Open SpaceBook User Guide & Help"
             aria-label="User Guide"
           >
-            <HelpCircle size={14} className="text-sky-700" />
+            <HelpCircle size={14} className="text-sky-600 dark:text-sky-400" />
             <span className="hidden sm:inline">Guide</span>
+          </button>
+
+          {/* Theme Toggle Button (Light / Dark) */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="flex items-center justify-center rounded-xl p-1.5 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-xs"
+            title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            aria-label="Toggle Light and Dark Theme"
+          >
+            {isDark ? (
+              <Sun size={15} className="text-amber-400 hover:rotate-45 transition-transform" />
+            ) : (
+              <Moon size={15} className="text-slate-600 hover:-rotate-12 transition-transform" />
+            )}
           </button>
 
           {/* User Menu */}
@@ -933,11 +979,13 @@ export default function TopNav({
                   (value) => !value
                 )
               }
-              className="flex items-center gap-2 rounded-lg border border-sky-300 px-2 py-1 text-xs text-sky-950 hover:bg-sky-200"
+              className="flex items-center gap-2 rounded-xl border border-slate-200/90 dark:border-slate-700 bg-white/90 dark:bg-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-xs"
             >
-              <User size={14} />
+              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-tr from-sky-600 to-indigo-600 text-[10px] font-bold text-white shadow-2xs">
+                {(user?.name ? user.name.charAt(0).toUpperCase() : isAdmin ? 'A' : 'E')}
+              </div>
 
-              <span className="max-w-[100px] truncate font-mono text-xs">
+              <span className="max-w-[100px] truncate text-xs font-medium text-slate-700 dark:text-slate-200">
                 {user?.name ||
                   (isAdmin
                     ? 'Admin'
@@ -946,11 +994,15 @@ export default function TopNav({
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 top-full z-50 mt-1 w-32 rounded-lg border border-slate-200 bg-white py-1 font-sans text-sm text-ink shadow-md">
+              <div className="absolute right-0 top-full z-50 mt-1.5 w-36 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-1 shadow-lg divide-y divide-slate-100 dark:divide-slate-700">
+                <div className="px-3 py-1.5">
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">Signed in as</p>
+                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">{user?.name || (isAdmin ? 'Admin' : 'Employee')}</p>
+                </div>
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="block w-full px-3 py-2 text-left font-medium text-clay transition-colors hover:bg-slate-50 text-xs"
+                  className="block w-full px-3 py-2 text-left font-semibold text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30 text-xs"
                 >
                   Sign out
                 </button>

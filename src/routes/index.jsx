@@ -6,6 +6,7 @@ import {
 } from 'react-router-dom'
 
 import { AuthProvider } from '../context/AuthContext'
+import { ThemeProvider } from '../context/ThemeContext'
 import RequireAuth from '../components/RequireAuth'
 import AppShell from '../components/layout/AppShell'
 import LoginPage from '../pages/Login'
@@ -27,13 +28,14 @@ import AdminReportsPage from '../pages/Admin/Reports'
 
 export default function AppRoutes() {
   return (
-    <AuthProvider>
-      <BrowserRouter
-        future={{
-          v7_startTransition: true,
-          v7_relativeSplatPath: true,
-        }}
-      >
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
         <Routes>
 
           {/* PUBLIC ROUTES */}
@@ -179,5 +181,6 @@ export default function AppRoutes() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
+  </ThemeProvider>
   )
 }

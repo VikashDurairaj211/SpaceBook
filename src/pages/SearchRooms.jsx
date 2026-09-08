@@ -19,9 +19,24 @@ import Button from "../components/common/Button";
 import Card from "../components/common/Card";
 import Loader from "../components/common/Loader";
 import Modal from "../components/common/Modal";
-
-
-
+import {
+  Sparkles,
+  Building2,
+  Users,
+  Presentation,
+  Tv,
+  Calendar,
+  Clock,
+  ArrowRight,
+  CheckCircle2,
+  Search,
+  MapPin,
+  Layers,
+  ChevronRight,
+  ShieldCheck,
+  Video,
+  Monitor,
+} from "lucide-react";
 
 const isWeekendDate = (dateStr) => {
   if (!dateStr) return false;
@@ -208,77 +223,103 @@ export default function SearchRooms() {
   }, []);
 
   // ===================================================
-  // TOP NAV SEARCH PARAMETER SYNC
+  // TOP NAV & DASHBOARD RECOMMENDATION PARAMETER SYNC
   // ===================================================
 
+  const lastProcessedSearchRef = useRef("");
+
   useEffect(() => {
+    const searchString = searchParams.toString();
+    if (!searchString) return;
+    if (lastProcessedSearchRef.current === searchString) return;
+    lastProcessedSearchRef.current = searchString;
+
     const moduleParam = searchParams.get("module") || "";
     const roomTypeParam = searchParams.get("roomType") || "";
     const roomTypeIdParam = searchParams.get("roomTypeId") || "";
+    const capacityParam = searchParams.get("capacity") || searchParams.get("attendees") || "";
+    const dateParam = searchParams.get("date") || "";
+    const startTimeParam = searchParams.get("startTime") || "";
+    const endTimeParam = searchParams.get("endTime") || "";
+    const autoSearch = searchParams.get("autoSearch") === "true";
     const query = String(
       searchParams.get("q") ||
       searchParams.get("search") ||
       ""
     ).toLowerCase().trim();
 
-    if (!moduleParam && !roomTypeParam && !roomTypeIdParam && !query) return;
+    if (!moduleParam && !roomTypeParam && !roomTypeIdParam && !capacityParam && !dateParam && !startTimeParam && !endTimeParam && !query) return;
+
+    let nextModule = "";
+    let nextRoomTypeId = "";
+
+    if (moduleParam) {
+      if (moduleParam.toLowerCase().includes("tidel") || moduleParam.toLowerCase().includes("tidal")) {
+        nextModule = "Module 1 - Tidel Park - CMB";
+      } else if (moduleParam.toLowerCase().includes("module 2") || moduleParam.toLowerCase().includes("m2")) {
+        nextModule = "Module 2 - Elcot Park - CMB";
+      } else if (moduleParam.toLowerCase().includes("module 1") || moduleParam.toLowerCase().includes("m1")) {
+        nextModule = "Module 1 - Elcot Park - CMB";
+      } else {
+        nextModule = moduleParam;
+      }
+    }
+
+    if (roomTypeIdParam) {
+      nextRoomTypeId = String(roomTypeIdParam);
+    } else if (roomTypeParam) {
+      const found = roomTypes.find(t => t.name.toLowerCase() === roomTypeParam.toLowerCase());
+      if (found) {
+        nextRoomTypeId = String(found.id);
+      }
+    }
+
+    if (!nextModule && query) {
+      if (query.includes("tidel") || query.includes("tidal") || query.includes("to1")) {
+        nextModule = "Module 1 - Tidel Park - CMB";
+      } else if (query.includes("module 2") || query.includes("m2") || query.includes("eo2")) {
+        nextModule = "Module 2 - Elcot Park - CMB";
+      } else if (query.includes("module 1") || query.includes("m1") || query.includes("eo1")) {
+        nextModule = "Module 1 - Elcot Park - CMB";
+      }
+    }
+
+    if (!nextRoomTypeId && query) {
+      if (query.includes("conference")) {
+        nextRoomTypeId = "1";
+        if (!nextModule) {
+          nextModule = "Module 1 - Elcot Park - CMB";
+        }
+      } else if (query.includes("training")) {
+        nextRoomTypeId = "2";
+        if (!nextModule) {
+          nextModule = "Module 2 - Elcot Park - CMB";
+        }
+      } else if (query.includes("discussion")) {
+        nextRoomTypeId = "3";
+      }
+    }
 
     setFilters((prev) => {
-      let nextModule = prev.module;
-      let nextRoomTypeId = prev.roomTypeId;
-
-      if (moduleParam) {
-        if (moduleParam.toLowerCase().includes("tidel") || moduleParam.toLowerCase().includes("tidal")) {
-          nextModule = "Module 1 - Tidel Park - CMB";
-        } else if (moduleParam.toLowerCase().includes("module 2") || moduleParam.toLowerCase().includes("m2")) {
-          nextModule = "Module 2 - Elcot Park - CMB";
-        } else if (moduleParam.toLowerCase().includes("module 1") || moduleParam.toLowerCase().includes("m1")) {
-          nextModule = "Module 1 - Elcot Park - CMB";
-        }
-      }
-
-      if (roomTypeIdParam) {
-        nextRoomTypeId = String(roomTypeIdParam);
-      } else if (roomTypeParam) {
-        const found = roomTypes.find(t => t.name.toLowerCase() === roomTypeParam.toLowerCase());
-        if (found) {
-          nextRoomTypeId = String(found.id);
-        }
-      }
-
-      if (!nextModule && query) {
-        if (query.includes("tidel") || query.includes("tidal") || query.includes("to1")) {
-          nextModule = "Module 1 - Tidel Park - CMB";
-        } else if (query.includes("module 2") || query.includes("m2") || query.includes("eo2")) {
-          nextModule = "Module 2 - Elcot Park - CMB";
-        } else if (query.includes("module 1") || query.includes("m1") || query.includes("eo1")) {
-          nextModule = "Module 1 - Elcot Park - CMB";
-        }
-      }
-
-      if (!nextRoomTypeId && query) {
-        if (query.includes("conference")) {
-          nextRoomTypeId = "1";
-          if (!nextModule) {
-            nextModule = "Module 1 - Elcot Park - CMB";
-          }
-        } else if (query.includes("training")) {
-          nextRoomTypeId = "2";
-          if (!nextModule) {
-            nextModule = "Module 2 - Elcot Park - CMB";
-          }
-        } else if (query.includes("discussion")) {
-          nextRoomTypeId = "3";
-        }
-      }
-
-      return {
+      const updated = {
         ...prev,
         module: nextModule || prev.module,
         roomTypeId: nextRoomTypeId || prev.roomTypeId,
+        capacity: capacityParam || prev.capacity,
+        date: dateParam || prev.date,
+        startTime: startTimeParam || prev.startTime,
+        endTime: endTimeParam || prev.endTime,
       };
+
+      if (autoSearch && updated.module && updated.roomTypeId) {
+        setTimeout(() => {
+          executeSearch(updated, null, query);
+        }, 100);
+      }
+
+      return updated;
     });
-  }, [searchParams]);
+  }, [searchParams, roomTypes]);
 
   const [results, setResults] =
     useState([]);
@@ -419,17 +460,17 @@ export default function SearchRooms() {
     setSearchMessage("");
     setError("");
   }
-
   // ===================================================
   // GET ROOM TYPE NAME
   // ===================================================
 
-  function getRoomTypeName() {
+  function getRoomTypeName(customRoomTypeId = null) {
+    const targetId = customRoomTypeId ?? filters.roomTypeId;
     const roomType =
       roomTypes.find(
         (type) =>
           String(type.id) ===
-          String(filters.roomTypeId)
+          String(targetId)
       );
 
     return roomType?.name || "";
@@ -439,13 +480,12 @@ export default function SearchRooms() {
   // MODULE / ROOM TYPE VALIDATION
   // ===================================================
 
-  function validateModuleRoomType() {
-    const roomType =
-      getRoomTypeName();
+  function validateModuleRoomType(customModule = null, customRoomTypeId = null) {
+    const mod = customModule ?? filters.module;
+    const roomType = getRoomTypeName(customRoomTypeId);
 
     if (
-      filters.module ===
-      "Module 2 - Elcot Park - CMB" &&
+      mod === "Module 2 - Elcot Park - CMB" &&
       roomType === "Conference"
     ) {
       setSearchMessage(
@@ -456,8 +496,7 @@ export default function SearchRooms() {
     }
 
     if (
-      filters.module ===
-      "Module 1 - Elcot Park - CMB" &&
+      mod === "Module 1 - Elcot Park - CMB" &&
       roomType === "Training"
     ) {
       setSearchMessage(
@@ -474,10 +513,12 @@ export default function SearchRooms() {
   // SEARCH ROOMS
   // ===================================================
 
-  async function handleSearch(e) {
+  async function executeSearch(customFilters = null, e = null, queryParam = "") {
     if (e?.preventDefault) {
       e.preventDefault();
     }
+
+    const currentFilters = customFilters || filters;
 
     setCapacityExceeded(false);
     setSearchMessage("");
@@ -488,14 +529,14 @@ export default function SearchRooms() {
     // REQUIRED FIELDS
     // =================================================
 
-    if (!filters.module) {
+    if (!currentFilters.module) {
       setError(
         "Please select a module."
       );
       return;
     }
 
-    if (!filters.roomTypeId) {
+    if (!currentFilters.roomTypeId) {
       setError(
         "Please select a room type."
       );
@@ -506,7 +547,7 @@ export default function SearchRooms() {
     // MODULE / ROOM TYPE
     // =================================================
 
-    if (!validateModuleRoomType()) {
+    if (!validateModuleRoomType(currentFilters.module, currentFilters.roomTypeId)) {
       setResultsOpen(true);
       return;
     }
@@ -515,11 +556,11 @@ export default function SearchRooms() {
     // PARTICIPANT VALIDATION & CAPACITY CHECK
     // =================================================
 
-    const requestedCapacity = filters.capacity
-      ? Number(filters.capacity)
+    const requestedCapacity = currentFilters.capacity
+      ? Number(currentFilters.capacity)
       : 0;
 
-    if (filters.capacity && requestedCapacity < 1) {
+    if (currentFilters.capacity && requestedCapacity < 1) {
       setError(
         "Number of participants must be at least 1."
       );
@@ -531,10 +572,10 @@ export default function SearchRooms() {
     // =================================================
 
     if (
-      filters.startTime &&
-      filters.endTime &&
-      filters.startTime >=
-      filters.endTime
+      currentFilters.startTime &&
+      currentFilters.endTime &&
+      currentFilters.startTime >=
+      currentFilters.endTime
     ) {
       setError(
         "End time must be after start time."
@@ -547,8 +588,8 @@ export default function SearchRooms() {
     // =================================================
 
     if (
-      filters.startTime &&
-      filters.startTime <
+      currentFilters.startTime &&
+      currentFilters.startTime <
       OFFICE_START_TIME
     ) {
       setError(
@@ -558,8 +599,8 @@ export default function SearchRooms() {
     }
 
     if (
-      filters.endTime &&
-      filters.endTime >
+      currentFilters.endTime &&
+      currentFilters.endTime >
       OFFICE_END_TIME
     ) {
       setError(
@@ -572,10 +613,10 @@ export default function SearchRooms() {
     // DATE VALIDATION
     // =================================================
 
-    if (filters.date) {
+    if (currentFilters.date) {
       const selectedDate =
         new Date(
-          `${filters.date}T00:00:00`
+          `${currentFilters.date}T00:00:00`
         );
 
       const today =
@@ -639,7 +680,7 @@ export default function SearchRooms() {
       ].join("-");
 
       if (
-        filters.date === todayStr
+        currentFilters.date === todayStr
       ) {
         const currentTime =
           `${String(
@@ -649,8 +690,8 @@ export default function SearchRooms() {
           ).padStart(2, "0")}`;
 
         if (
-          filters.startTime &&
-          filters.startTime <=
+          currentFilters.startTime &&
+          currentFilters.startTime <=
           currentTime
         ) {
           setError(
@@ -660,8 +701,8 @@ export default function SearchRooms() {
         }
 
         if (
-          filters.endTime &&
-          filters.endTime <=
+          currentFilters.endTime &&
+          currentFilters.endTime <=
           currentTime
         ) {
           setError(
@@ -681,37 +722,37 @@ export default function SearchRooms() {
     try {
       const searchPayload = {
         module:
-          filters.module ||
+          currentFilters.module ||
           undefined,
 
         roomTypeId:
-          filters.roomTypeId
+          currentFilters.roomTypeId
             ? Number(
-              filters.roomTypeId
+              currentFilters.roomTypeId
             )
             : undefined,
 
         participantCount:
-          filters.capacity
+          currentFilters.capacity
             ? Number(
-              filters.capacity
+              currentFilters.capacity
             )
             : undefined,
 
         facilityIds: [],
 
         bookingDate:
-          filters.date ||
+          currentFilters.date ||
           undefined,
 
         startTime:
-          filters.startTime
-            ? `${filters.startTime}:00`
+          currentFilters.startTime
+            ? `${currentFilters.startTime}:00`
             : undefined,
 
         endTime:
-          filters.endTime
-            ? `${filters.endTime}:00`
+          currentFilters.endTime
+            ? `${currentFilters.endTime}:00`
             : undefined,
       };
 
@@ -734,52 +775,58 @@ export default function SearchRooms() {
         searchResults = data;
       } else if (
         data &&
-        Array.isArray(data.rooms)
+        typeof data === "object"
       ) {
-        searchResults =
-          data.rooms;
-
-        backendMessage =
-          data.message || "";
-
-        isCapacityExceeded =
-          data.capacityExceeded === true;
-      } else if (data) {
-        searchResults = [];
-
-        backendMessage =
-          data.message || "";
-
-        isCapacityExceeded =
-          data.capacityExceeded === true;
-      }
-
-      // Filter out rooms that are in Maintenance or Blocked
-      let statusOverrides = {};
-      let blockedRoomIds = [];
-      try {
-        statusOverrides = JSON.parse(localStorage.getItem('spacebook_room_status_overrides') || '{}');
-        blockedRoomIds = JSON.parse(localStorage.getItem('spacebook_blocked_rooms') || '[]');
-      } catch {
-        // ignore
-      }
-
-      let maintenanceCount = 0;
-      const initialCount = searchResults.length;
-
-      searchResults = searchResults.filter((room) => {
-        const id = String(room.id ?? room.roomId ?? '').trim();
-        const code = String(room.roomNumber ?? room.roomCode ?? room.code ?? '').trim().toLowerCase();
-
-        const override = statusOverrides[id] || (code && statusOverrides[code]);
-        if (override && String(override).toLowerCase() === 'maintenance') {
-          maintenanceCount++;
-          return false;
+        if (
+          Array.isArray(data.rooms)
+        ) {
+          searchResults =
+            data.rooms;
+        } else if (
+          Array.isArray(data.data)
+        ) {
+          searchResults =
+            data.data;
+        } else if (
+          Array.isArray(data.result)
+        ) {
+          searchResults =
+            data.result;
         }
 
-        if (id && blockedRoomIds.map(String).includes(id)) {
-          maintenanceCount++;
-          return false;
+        backendMessage =
+          data.message ||
+          data.Message ||
+          "";
+
+        isCapacityExceeded =
+          Boolean(
+            data.isCapacityExceeded
+          );
+      }
+
+      const initialCount = searchResults.length;
+      let maintenanceCount = 0;
+
+      // Filter out maintenance/blocked rooms
+      searchResults = searchResults.filter((room) => {
+        const id = String(room.roomId || room.id || '').trim();
+        const code = String(room.roomNumber || room.roomCode || room.code || '').trim().toLowerCase();
+
+        try {
+          const overrides = JSON.parse(localStorage.getItem('spacebook_room_status_overrides') || '{}');
+          const blocked = JSON.parse(localStorage.getItem('spacebook_blocked_rooms') || '[]');
+
+          if (overrides[id] === 'Maintenance' || (code && overrides[code] === 'Maintenance')) {
+            maintenanceCount++;
+            return false;
+          }
+          if (id && blocked.map(String).includes(id)) {
+            maintenanceCount++;
+            return false;
+          }
+        } catch {
+          // ignore
         }
 
         const roomStatus = String(room.status || room.roomStatus || '').toLowerCase();
@@ -806,7 +853,7 @@ export default function SearchRooms() {
         const id = room.roomId ?? room.id ?? room.RoomId;
         const name = room.roomName ?? room.name ?? room.RoomName ?? 'Room';
         const code = room.roomNumber ?? room.roomCode ?? room.code ?? '';
-        const roomType = getRoomTypeName(room);
+        const roomType = getRoomTypeName(room.roomTypeId ?? room.roomType);
         const moduleName = getRoomModuleName(room);
         const capacity = Number(room.capacity ?? room.roomCapacity ?? 4);
         const facilities = normalizeRoomFacilities(room.facilities);
@@ -823,6 +870,16 @@ export default function SearchRooms() {
           facilities: facilities,
         };
       });
+
+      // If query was provided, prioritize matching room
+      if (queryParam) {
+        const qLower = String(queryParam).toLowerCase();
+        searchResults.sort((a, b) => {
+          const aMatch = String(a.roomName || "").toLowerCase().includes(qLower) ? 1 : 0;
+          const bMatch = String(b.roomName || "").toLowerCase().includes(qLower) ? 1 : 0;
+          return bMatch - aMatch;
+        });
+      }
 
       // Check if backend message indicates capacity failure
       const lowerBackendMsg = String(backendMessage).toLowerCase();
@@ -855,17 +912,17 @@ export default function SearchRooms() {
           finalMessage =
             "No room can accommodate the selected number of participants.";
         } else {
-          const roomType = getRoomTypeName();
+          const roomType = getRoomTypeName(currentFilters.roomTypeId);
 
           if (
             roomType === "Conference" &&
-            filters.module === "Module 2 - Elcot Park - CMB"
+            currentFilters.module === "Module 2 - Elcot Park - CMB"
           ) {
             finalMessage =
               "Conference rooms are available only in Module 1 - Elcot Park - CMB.";
           } else if (
             roomType === "Training" &&
-            filters.module === "Module 1 - Elcot Park - CMB"
+            currentFilters.module === "Module 1 - Elcot Park - CMB"
           ) {
             finalMessage =
               "Training rooms are available only in Module 2 - Elcot Park - CMB.";
@@ -905,6 +962,10 @@ export default function SearchRooms() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleSearch(e) {
+    return executeSearch(null, e);
   }
 
   // ===================================================
@@ -1197,25 +1258,134 @@ export default function SearchRooms() {
   // ===================================================
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
 
-      {/* PAGE HEADER */}
+      {/* PAGE HERO HEADER */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+              Workspace Search
+            </h1>
+            <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-sky-50 border border-sky-200 px-2.5 py-0.5 text-xs font-semibold text-sky-700">
+              <Sparkles size={12} className="text-sky-500" />
+              Smart Finder
+            </span>
+          </div>
 
-      <div>
-        <h1 className="font-display text-3xl font-bold">
-          Workspace Search
-        </h1>
-
-        <p className="mt-2 text-slate-600">
-          Select module and room type to find available rooms.
-        </p>
+          <p className="mt-1 text-xs sm:text-sm text-slate-500">
+            Find and book the ideal conference, discussion, or training space across office campuses.
+          </p>
+        </div>
       </div>
 
+      {/* WORKSPACE QUICK CATEGORY SHOWCASE */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {/* Discussion */}
+        <div
+          onClick={() => {
+            if (!filters.module && modules.length > 0) {
+              updateFilter("module", modules[0]);
+            }
+            updateFilter("roomTypeId", "3");
+          }}
+          className={`group cursor-pointer rounded-2xl border p-4 transition-all shadow-card hover:shadow-card-hover ${
+            filters.roomTypeId === "3"
+              ? "border-sky-500 bg-sky-50/50 ring-2 ring-sky-500/20"
+              : "border-slate-200/80 bg-white hover:border-sky-300"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 group-hover:scale-105 transition-transform">
+              <Users size={20} />
+            </div>
+            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">
+              8–10 Seats
+            </span>
+          </div>
+          <h3 className="mt-3 font-bold text-sm text-slate-900 group-hover:text-sky-700 transition-colors">
+            Discussion Rooms
+          </h3>
+          <p className="mt-0.5 text-[11px] text-slate-500 leading-snug">
+            Whiteboard, Video Conf & high-speed Wi-Fi for team syncs.
+          </p>
+        </div>
 
+        {/* Conference */}
+        <div
+          onClick={() => {
+            if (!filters.module && modules.length > 0) {
+              updateFilter("module", modules[0]);
+            }
+            updateFilter("roomTypeId", "1");
+          }}
+          className={`group cursor-pointer rounded-2xl border p-4 transition-all shadow-card hover:shadow-card-hover ${
+            filters.roomTypeId === "1"
+              ? "border-sky-500 bg-sky-50/50 ring-2 ring-sky-500/20"
+              : "border-slate-200/80 bg-white hover:border-sky-300"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600 group-hover:scale-105 transition-transform">
+              <Building2 size={20} />
+            </div>
+            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">
+              Up to 20 Seats
+            </span>
+          </div>
+          <h3 className="mt-3 font-bold text-sm text-slate-900 group-hover:text-sky-700 transition-colors">
+            Conference Rooms
+          </h3>
+          <p className="mt-0.5 text-[11px] text-slate-500 leading-snug">
+            TV Monitor, Speaker & Video Conferencing for board reviews.
+          </p>
+        </div>
 
-      {/* SEARCH FORM */}
+        {/* Training */}
+        <div
+          onClick={() => {
+            if (!filters.module && modules.length > 0) {
+              updateFilter("module", modules[0]);
+            }
+            updateFilter("roomTypeId", "2");
+          }}
+          className={`group cursor-pointer rounded-2xl border p-4 transition-all shadow-card hover:shadow-card-hover ${
+            filters.roomTypeId === "2"
+              ? "border-sky-500 bg-sky-50/50 ring-2 ring-sky-500/20"
+              : "border-slate-200/80 bg-white hover:border-sky-300"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 group-hover:scale-105 transition-transform">
+              <Presentation size={20} />
+            </div>
+            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">
+              Up to 50 Seats
+            </span>
+          </div>
+          <h3 className="mt-3 font-bold text-sm text-slate-900 group-hover:text-indigo-700 transition-colors">
+            Training Rooms
+          </h3>
+          <p className="mt-0.5 text-[11px] text-slate-500 leading-snug">
+            Projector, Microphone & surround audio for large workshops.
+          </p>
+        </div>
+      </div>
 
-      <Card>
+      {/* SEARCH FILTER CARD */}
+      <div className="rounded-2xl border border-slate-200/85 bg-white p-5 shadow-card">
+        <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2">
+            <Search size={16} className="text-sky-600" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+              Filter Available Workspaces
+            </h2>
+          </div>
+          <span className="text-[11px] font-medium text-slate-400">
+            Fill in requirements to see live room options
+          </span>
+        </div>
+
         <form
           onSubmit={handleSearch}
           className="space-y-5"
@@ -1223,14 +1393,11 @@ export default function SearchRooms() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 
             {/* MODULE */}
-
             <Field
               label={
-                <span>
-                  1. Select Module{" "}
-                  <span className="text-red-500">
-                    *
-                  </span>
+                <span className="font-semibold text-slate-700 text-xs flex items-center gap-1.5">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-sky-100 text-[10px] font-bold text-sky-700">1</span>
+                  Select Campus Module <span className="text-rose-500">*</span>
                 </span>
               }
             >
@@ -1244,7 +1411,7 @@ export default function SearchRooms() {
                 }
               >
                 <option value="">
-                  Select Module
+                  Select Campus Module
                 </option>
 
                 {modules.map(
@@ -1261,14 +1428,11 @@ export default function SearchRooms() {
             </Field>
 
             {/* ROOM TYPE */}
-
             <Field
               label={
-                <span>
-                  2. Select Room Type{" "}
-                  <span className="text-red-500">
-                    *
-                  </span>
+                <span className="font-semibold text-slate-700 text-xs flex items-center gap-1.5">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-sky-100 text-[10px] font-bold text-sky-700">2</span>
+                  Select Room Type <span className="text-rose-500">*</span>
                 </span>
               }
             >
@@ -1304,13 +1468,19 @@ export default function SearchRooms() {
             </Field>
 
             {/* PARTICIPANTS */}
-
-            <Field label="3. Number of Participants">
+            <Field
+              label={
+                <span className="font-semibold text-slate-700 text-xs flex items-center gap-1.5">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-sky-100 text-[10px] font-bold text-sky-700">3</span>
+                  Required Capacity (Seats)
+                </span>
+              }
+            >
               <Input
                 type="number"
                 min="1"
                 value={filters.capacity}
-                placeholder="Enter count"
+                placeholder="e.g. 8"
                 onChange={(e) =>
                   updateFilter(
                     "capacity",
@@ -1321,9 +1491,13 @@ export default function SearchRooms() {
             </Field>
 
             {/* DATE */}
-
             <BusinessDatePicker
-              label="4. Booking Date"
+              label={
+                <span className="font-semibold text-slate-700 text-xs flex items-center gap-1.5">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-sky-100 text-[10px] font-bold text-sky-700">4</span>
+                  Reservation Date
+                </span>
+              }
               min={todayStr}
               max={maxDateStr}
               value={filters.date}
@@ -1333,9 +1507,13 @@ export default function SearchRooms() {
             />
 
             {/* START TIME */}
-
             <ScrollableTimePicker
-              label="5. Start Time"
+              label={
+                <span className="font-semibold text-slate-700 text-xs flex items-center gap-1.5">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-sky-100 text-[10px] font-bold text-sky-700">5</span>
+                  Start Time
+                </span>
+              }
               value={filters.startTime}
               selectedDate={filters.date}
               onChange={(value) =>
@@ -1347,9 +1525,13 @@ export default function SearchRooms() {
             />
 
             {/* END TIME */}
-
             <ScrollableTimePicker
-              label="6. End Time"
+              label={
+                <span className="font-semibold text-slate-700 text-xs flex items-center gap-1.5">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-sky-100 text-[10px] font-bold text-sky-700">6</span>
+                  End Time
+                </span>
+              }
               value={filters.endTime}
               selectedDate={filters.date}
               minTime={filters.startTime}
@@ -1363,59 +1545,60 @@ export default function SearchRooms() {
           </div>
 
           {/* ERROR */}
-
           {error && (
-            <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
+            <div className="rounded-xl border border-rose-200 bg-rose-50/90 p-3.5 text-xs font-semibold text-rose-800 shadow-2xs">
               {error}
             </div>
           )}
 
           {/* SEARCH BUTTON */}
-
-          <Button
-            type="submit"
-            disabled={
-              !canSearch ||
-              loading
-            }
-          >
-            {loading
-              ? "Searching..."
-              : "Search Available Meeting Spaces"}
-          </Button>
+          <div className="flex items-center justify-end pt-1">
+            <button
+              type="submit"
+              disabled={
+                !canSearch ||
+                loading
+              }
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 disabled:opacity-50 px-7 py-3 text-xs font-bold text-white shadow-sm shadow-sky-500/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Search size={15} className="stroke-[2.5]" />
+              <span>
+                {loading
+                  ? "Searching available spaces..."
+                  : "Search Available Meeting Spaces"}
+              </span>
+            </button>
+          </div>
         </form>
-      </Card>
+      </div>
 
       {/* MY BOOKINGS */}
 
-      <Card className="overflow-hidden p-0">
-
-        <div className="flex items-center justify-between border-b border-line px-5 py-4">
-
+      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-0 shadow-card">
+        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
           <div>
-            <h2 className="text-lg font-semibold">
-              My Bookings
+            <h2 className="text-sm font-bold text-slate-900">
+              My Recent Bookings
             </h2>
-
-            <p className="text-sm text-slate-500">
-              Your recent workspace reservations.
+            <p className="text-xs text-slate-500">
+              Your active workspace reservations
             </p>
           </div>
 
           <Link
             to="/my-bookings"
-            className="text-sm font-medium text-blue-600 hover:underline"
+            className="text-xs font-bold text-sky-600 hover:text-sky-800 transition-colors"
           >
             View All
           </Link>
         </div>
 
         {bookings.length === 0 ? (
-          <div className="p-5 text-sm text-slate-500">
+          <div className="p-6 text-center text-xs font-medium text-slate-400">
             No bookings found.
           </div>
         ) : (
-          <div className="divide-y">
+          <div className="divide-y divide-slate-100">
             {bookings
               .slice(0, 3)
               .map((booking) => (
@@ -1423,16 +1606,16 @@ export default function SearchRooms() {
                   key={
                     booking.bookingId
                   }
-                  className="flex items-center justify-between p-4"
+                  className="flex items-center justify-between p-3.5 hover:bg-sky-50/30 transition-colors"
                 >
                   <div>
-                    <p className="font-semibold">
+                    <p className="font-semibold text-xs text-slate-900">
                       {
                         booking.roomName
                       }
                     </p>
 
-                    <p className="text-sm text-slate-500">
+                    <p className="text-[11px] text-slate-500 font-medium">
                       {
                         booking.bookingDate
                       }
@@ -1456,7 +1639,7 @@ export default function SearchRooms() {
                   </div>
 
                   <span
-                    className={`inline-block w-28 rounded-full py-1 text-center text-xs font-bold tracking-wider uppercase ${getStatusBadgeClass(
+                    className={`inline-block w-24 rounded-full py-0.5 text-center text-[10px] font-bold tracking-wider uppercase ${getStatusBadgeClass(
                       booking.status
                     )}`}
                   >
@@ -1468,7 +1651,7 @@ export default function SearchRooms() {
               ))}
           </div>
         )}
-      </Card>
+      </div>
 
       {/* LOADER */}
 
@@ -1487,21 +1670,22 @@ export default function SearchRooms() {
           resultsOpen &&
           !loading
         }
-        title="Available Rooms"
+        title="Available Workspaces"
         footer={
-          <Button
-            variant="secondary"
+          <button
+            type="button"
+            className="inline-flex items-center justify-center px-3.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 transition-colors shadow-xs active:scale-95 cursor-pointer"
             onClick={() =>
               setResultsOpen(false)
             }
           >
             Close
-          </Button>
+          </button>
         }
       >
         {results.length > 0 && (
-          <p className="mb-4 text-sm font-medium text-slate-600">
-            {results.length} available workspace{results.length !== 1 ? "s" : ""} found.
+          <p className="mb-4 text-xs font-semibold text-slate-600">
+            {results.length} available workspace{results.length !== 1 ? "s" : ""} found for your criteria:
           </p>
         )}
 
@@ -1510,105 +1694,93 @@ export default function SearchRooms() {
         {results.length === 0 ? (
           <div className="space-y-3">
             <div
-              className={`rounded-xl border p-4.5 ${searchMessage.toLowerCase().includes("maintenance")
+              className={`rounded-2xl border p-4 ${searchMessage.toLowerCase().includes("maintenance")
                   ? "border-amber-200 bg-amber-50/80 text-amber-950"
                   : capacityExceeded
-                    ? "border-red-200 bg-red-50 text-red-700"
+                    ? "border-rose-200 bg-rose-50 text-rose-700"
                     : "border-slate-200 bg-slate-50 text-slate-700"
                 }`}
             >
-              <p className="text-sm font-semibold">
+              <p className="text-xs font-bold">
                 {searchMessage ||
                   "No rooms are available for the selected criteria."}
               </p>
 
               {searchMessage.toLowerCase().includes("maintenance") && (
-                <p className="mt-1.5 text-xs text-amber-800">
+                <p className="mt-1 text-xs text-amber-800">
                   Facilities staff are currently servicing this workspace. Please select an alternative room type, time slot, or campus module.
                 </p>
               )}
 
               {capacityExceeded && (
-                <p className="mt-1.5 text-xs text-red-600">
+                <p className="mt-1 text-xs text-rose-600">
                   Please enter a smaller number of participants and search again.
                 </p>
               )}
             </div>
           </div>
         ) : (
-          <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
-
+          <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
             {results.map(
               (room) => (
-                <Card
+                <div
                   key={
                     room.roomId
                   }
+                  className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-card hover:shadow-card-hover transition-all"
                 >
                   <div className="flex items-start justify-between">
-
                     <div>
-                      <h3 className="text-lg font-semibold">
+                      <h3 className="text-sm font-bold text-slate-900">
                         {
                           room.roomName
                         }
                       </h3>
 
-                      <p className="text-sm text-slate-500">
+                      <p className="text-xs text-slate-500 font-medium">
                         {
                           room.module
                         }
                       </p>
                     </div>
 
-                    <span
-                      className={`inline-block w-28 rounded-full py-1 text-center text-xs font-bold tracking-wider uppercase ${getStatusBadgeClass(
-                        room.status || "Available"
-                      )}`}
-                    >
-                      {room.status || "Available"}
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200/70 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 shadow-2xs">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                      Available
                     </span>
                   </div>
 
-                  <div className="mt-4 space-y-2 text-sm">
-
-                    <p>
-                      <span className="font-medium">
-                        Room Type:
-                      </span>{" "}
-                      {
-                        room.roomType
-                      }
-                    </p>
-
-                    <p>
-                      <span className="font-medium">
-                        Capacity:
-                      </span>{" "}
-                      {
-                        room.capacity
-                      }
-                    </p>
-
-                    <p>
-                      <span className="font-medium">
-                        Facilities:
-                      </span>{" "}
-                      {room
-                        .facilities
-                        ?.length
-                        ? room.facilities.join(
-                          ", "
-                        )
-                        : "None"}
-                    </p>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <div className="rounded-xl bg-slate-50 border border-slate-100 p-2">
+                      <span className="font-semibold text-slate-500 text-[10px] uppercase">Type</span>
+                      <p className="font-bold text-slate-800">{room.roomType}</p>
+                    </div>
+                    <div className="rounded-xl bg-slate-50 border border-slate-100 p-2">
+                      <span className="font-semibold text-slate-500 text-[10px] uppercase">Capacity</span>
+                      <p className="font-bold text-slate-800">{room.capacity} seats</p>
+                    </div>
                   </div>
 
-                  <div className="mt-5 flex gap-3">
+                  {room.facilities?.length > 0 && (
+                    <div className="mt-2.5">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Amenities</p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {room.facilities.map((fac, idx) => (
+                          <span
+                            key={idx}
+                            className="rounded-md bg-slate-100 border border-slate-200/70 px-1.5 py-0.5 text-[9.5px] font-medium text-slate-700"
+                          >
+                            ✓ {typeof fac === 'object' ? fac.name : fac}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-                    <Button
-                      variant="secondary"
-                      className="flex-1"
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      type="button"
+                      className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 transition-colors shadow-xs active:scale-95 cursor-pointer"
                       onClick={() =>
                         handleOpenDetails(
                           room
@@ -1616,10 +1788,11 @@ export default function SearchRooms() {
                       }
                     >
                       View Details
-                    </Button>
+                    </button>
 
-                    <Button
-                      className="flex-1"
+                    <button
+                      type="button"
+                      className="flex-1 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 px-4 py-1.5 text-xs font-bold text-white shadow-xs transition-all"
                       onClick={() =>
                         handleBookRoom(
                           room.roomId
@@ -1627,13 +1800,11 @@ export default function SearchRooms() {
                       }
                     >
                       Book Now
-                    </Button>
-
+                    </button>
                   </div>
-                </Card>
+                </div>
               )
             )}
-
           </div>
         )}
       </Modal>
@@ -1650,14 +1821,15 @@ export default function SearchRooms() {
             : "Room Details"
         }
         footer={
-          <Button
-            variant="secondary"
+          <button
+            type="button"
+            className="inline-flex items-center justify-center px-3.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 transition-colors shadow-xs active:scale-95 cursor-pointer"
             onClick={() =>
               setDetailsOpen(false)
             }
           >
             Back
-          </Button>
+          </button>
         }
       >
         {selectedRoom && (
@@ -1784,14 +1956,15 @@ export default function SearchRooms() {
         footer={
           <div className="flex justify-end gap-3">
 
-            <Button
-              variant="secondary"
+            <button
+              type="button"
+              className="inline-flex items-center justify-center px-3.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 transition-colors shadow-xs active:scale-95 cursor-pointer"
               onClick={
                 cancelConflict
               }
             >
               Cancel
-            </Button>
+            </button>
 
             <Button
               onClick={

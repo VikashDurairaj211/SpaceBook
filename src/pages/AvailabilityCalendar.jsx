@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, User, Briefcase, Building2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import Button from "../components/common/Button";
@@ -413,31 +413,94 @@ export default function AvailabilityCalendar() {
               // -----------------------------------------
 
               timeSlots:
-                rawTimeSlots.map((slot) => ({
-                  ...slot,
+                rawTimeSlots.map((slot) => {
+                  const b =
+                    slot.booking ||
+                    slot.currentBooking ||
+                    room.currentBooking ||
+                    room.booking ||
+                    slot;
 
-                  start:
-                    slot.start ||
-                    slot.startTime ||
-                    slot.fromTime ||
-                    "",
+                  const bookedBy =
+                    slot.bookedBy ||
+                    slot.bookedByName ||
+                    slot.employeeName ||
+                    slot.requestedBy ||
+                    slot.userName ||
+                    slot.createdBy ||
+                    slot.user?.name ||
+                    b?.bookedBy ||
+                    b?.bookedByName ||
+                    b?.employeeName ||
+                    b?.requestedBy ||
+                    b?.userName ||
+                    b?.createdBy ||
+                    b?.employee?.name ||
+                    b?.user?.name ||
+                    null;
 
-                  end:
-                    slot.end ||
-                    slot.endTime ||
-                    slot.toTime ||
-                    "",
+                  const title =
+                    slot.title ||
+                    slot.meetingTitle ||
+                    slot.purpose ||
+                    slot.reason ||
+                    b?.title ||
+                    b?.meetingTitle ||
+                    b?.purpose ||
+                    b?.reason ||
+                    null;
 
-                  isBooked: isBlockedFlag
-                    ? true
-                    : slot.isBooked ??
-                    slot.booked ??
-                    false,
+                  const department =
+                    slot.department ||
+                    slot.employeeDepartment ||
+                    b?.department ||
+                    b?.employeeDepartment ||
+                    b?.user?.department ||
+                    b?.employee?.department ||
+                    null;
 
-                  status: isBlockedFlag
-                    ? "Maintenance"
-                    : slot.status,
-                })),
+                  const email =
+                    slot.email ||
+                    slot.userEmail ||
+                    b?.email ||
+                    b?.userEmail ||
+                    b?.employeeEmail ||
+                    b?.user?.email ||
+                    null;
+
+                  return {
+                    ...slot,
+
+                    start:
+                      slot.start ||
+                      slot.startTime ||
+                      slot.fromTime ||
+                      "",
+
+                    end:
+                      slot.end ||
+                      slot.endTime ||
+                      slot.toTime ||
+                      "",
+
+                    isBooked: isBlockedFlag
+                      ? true
+                      : slot.isBooked ??
+                      slot.booked ??
+                      false,
+
+                    status: isBlockedFlag
+                      ? "Maintenance"
+                      : slot.status,
+
+                    bookingInfo: {
+                      bookedBy,
+                      title,
+                      department,
+                      email,
+                    },
+                  };
+                }),
             };
 
             console.log(
@@ -829,94 +892,113 @@ export default function AvailabilityCalendar() {
   // =====================================================
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
 
       {/* HEADER */}
-
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold">
-            Workspace Availability
-          </h1>
-
-          <p className="mt-1 text-sm text-slate">
-            Find the right workspace and book an available time slot.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 w-full lg:w-auto">
-
-          {/* DAY NAVIGATION GROUP */}
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-1 sm:flex-none">
-            {/* PREVIOUS DAY */}
-            <Button
-              variant="secondary"
-              onClick={() =>
-                changeDays(-1)
-              }
-              disabled={
-                selectedDate <= today
-              }
-              aria-label="Previous day"
-              className="p-2 sm:px-3 sm:py-2 shrink-0"
-            >
-              <ChevronLeft size={16} />
-            </Button>
-
-            {/* DATE */}
-            <div className="flex-1 sm:w-auto sm:min-w-[190px]">
-              <BusinessDatePicker
-                min={today}
-                max={maxDate}
-                value={selectedDate}
-                onChange={(newDate) =>
-                  handleDateChange(newDate)
-                }
-              />
-            </div>
-
-            {/* NEXT DAY */}
-            <Button
-              variant="secondary"
-              onClick={() =>
-                changeDays(1)
-              }
-              disabled={
-                selectedDate >= maxDate
-              }
-              aria-label="Next day"
-              className="p-2 sm:px-3 sm:py-2 shrink-0"
-            >
-              <ChevronRight size={16} />
-            </Button>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+              Workspace Availability
+            </h1>
+            <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-sky-50 border border-sky-200 px-2.5 py-0.5 text-xs font-semibold text-sky-700">
+              Live Timeline
+            </span>
           </div>
 
-          {/* ROOM TYPE */}
-          <Select
-            value={filters.type}
-            onChange={(event) =>
-              updateFilter(
-                "type",
-                event.target.value
-              )
-            }
-            className="w-full sm:w-auto sm:min-w-[170px] sm:max-w-[220px] rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink transition-colors hover:border-sky-400"
-          >
-            {ROOM_TYPE_OPTIONS.map(
-              (type) => (
-                <option
-                  key={type}
-                  value={type}
-                >
-                  {type}
-                </option>
-              )
-            )}
-          </Select>
+          <p className="mt-1 text-xs sm:text-sm text-slate-500">
+            Find the right workspace and book an available time slot in real time.
+          </p>
+        </div>
+      </div>
 
+      {/* CONTROL & FILTER TOOLBAR */}
+      <div className="rounded-2xl border border-slate-200/85 bg-white p-3.5 shadow-card space-y-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+
+          {/* DAY NAVIGATION GROUP */}
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <div className="flex items-center rounded-xl border border-slate-200 bg-slate-50 p-0.5">
+              {/* PREVIOUS DAY */}
+              <button
+                type="button"
+                onClick={() => changeDays(-1)}
+                disabled={selectedDate <= today}
+                aria-label="Previous day"
+                className="p-1.5 rounded-lg text-slate-700 hover:bg-white hover:text-slate-900 disabled:opacity-40 disabled:hover:bg-transparent transition-all"
+              >
+                <ChevronLeft size={16} />
+              </button>
+
+              {/* DATE PICKER */}
+              <div className="px-1">
+                <BusinessDatePicker
+                  min={today}
+                  max={maxDate}
+                  value={selectedDate}
+                  onChange={(newDate) => handleDateChange(newDate)}
+                />
+              </div>
+
+              {/* NEXT DAY */}
+              <button
+                type="button"
+                onClick={() => changeDays(1)}
+                disabled={selectedDate >= maxDate}
+                aria-label="Next day"
+                className="p-1.5 rounded-lg text-slate-700 hover:bg-white hover:text-slate-900 disabled:opacity-40 disabled:hover:bg-transparent transition-all"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+
+            {/* JUMP TO TODAY BUTTON */}
+            {selectedDate !== today && (
+              <button
+                type="button"
+                onClick={() => handleDateChange(today)}
+                className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-bold text-sky-700 hover:bg-sky-100 transition-all"
+              >
+                Jump to Today
+              </button>
+            )}
+          </div>
+
+          {/* ROOM TYPE FILTER BUTTONS / SELECTOR */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
+            {ROOM_TYPE_OPTIONS.map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => updateFilter("type", type)}
+                className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all shrink-0 ${
+                  filters.type === type
+                    ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white shadow-xs"
+                    : "border border-slate-200 bg-slate-50 text-slate-600 hover:bg-white hover:text-slate-900 hover:border-slate-300"
+                }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
         </div>
 
+        {/* STATUS LEGEND */}
+        <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-slate-100 text-xs">
+          <span className="font-bold text-slate-400 uppercase text-[10px] tracking-wider">Legend:</span>
+          <div className="flex items-center gap-1.5 text-slate-600 font-medium">
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+            <span>Available</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-slate-600 font-medium">
+            <span className="h-2.5 w-2.5 rounded-full bg-indigo-500"></span>
+            <span>Reserved / Booked</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-slate-600 font-medium">
+            <span className="h-2.5 w-2.5 rounded-full bg-amber-500"></span>
+            <span>Under Maintenance</span>
+          </div>
+        </div>
       </div>
 
       {/* LOADING */}
@@ -1053,12 +1135,57 @@ export default function AvailabilityCalendar() {
 
             </div>
 
-            {/* BOOKING (Only for reserved/booked slots) */}
+            {/* RESERVATION DETAILS (When slot is Booked / Pending) */}
+            {selectedSlot.status !== "Available" && selectedSlot.status !== "Maintenance" && (
+              <div className="rounded-xl border border-slate-200 bg-slate-50/90 p-3.5 space-y-2 text-xs">
+                <p className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500 pb-1 border-b border-slate-200/80">
+                  Reservation Details
+                </p>
 
-            {selectedSlot.status !== "Available" && selectedSlot.booking?.title && (
-              <p>
-                Booking: {selectedSlot.booking.title}
-              </p>
+                {selectedSlot.slot?.bookingInfo?.bookedBy || selectedSlot.booking?.bookedBy ? (
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 font-medium flex items-center gap-1.5">
+                      <User size={13} className="text-slate-400 shrink-0" />
+                      Reserved By:
+                    </span>
+                    <span className="font-semibold text-slate-900">
+                      {selectedSlot.slot?.bookingInfo?.bookedBy || selectedSlot.booking?.bookedBy}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 font-medium flex items-center gap-1.5">
+                      <User size={13} className="text-slate-400 shrink-0" />
+                      Status:
+                    </span>
+                    <span className="font-semibold text-slate-700 italic">Occupied</span>
+                  </div>
+                )}
+
+                {(selectedSlot.slot?.bookingInfo?.department || selectedSlot.booking?.department) && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 font-medium flex items-center gap-1.5">
+                      <Building2 size={13} className="text-slate-400 shrink-0" />
+                      Department:
+                    </span>
+                    <span className="font-medium text-slate-700">
+                      {selectedSlot.slot?.bookingInfo?.department || selectedSlot.booking?.department}
+                    </span>
+                  </div>
+                )}
+
+                {(selectedSlot.slot?.bookingInfo?.title || selectedSlot.booking?.title) && (
+                  <div className="flex justify-between items-start pt-1.5 border-t border-slate-200/70">
+                    <span className="text-slate-500 font-medium flex items-center gap-1.5 shrink-0">
+                      <Briefcase size={13} className="text-slate-400 shrink-0" />
+                      Meeting Purpose:
+                    </span>
+                    <span className="font-semibold text-slate-900 text-right max-w-[65%] truncate">
+                      {selectedSlot.slot?.bookingInfo?.title || selectedSlot.booking?.title}
+                    </span>
+                  </div>
+                )}
+              </div>
             )}
 
           </div>

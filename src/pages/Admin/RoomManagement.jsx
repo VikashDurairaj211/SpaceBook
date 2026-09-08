@@ -6,7 +6,22 @@ import client from '../../api/client'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import Modal from '../../components/common/Modal'
-import { AlertTriangle } from 'lucide-react'
+import {
+  AlertTriangle,
+  LayoutGrid,
+  List,
+  Layers,
+  CheckCircle2,
+  Users,
+  Wrench,
+  MapPin,
+  Sparkles,
+  Building2,
+  Plus,
+  Tv,
+  Monitor,
+  Projector,
+} from 'lucide-react'
 
 // =====================================================
 // ROOM TYPE IDS
@@ -27,19 +42,28 @@ const ROOM_TYPE_IDS = {
 function CustomStatusTag({ status }) {
   const raw = String(status || 'Available').toUpperCase()
 
-  let bgClass = 'bg-[#658362] text-white'
-
   if (raw === 'MAINTENANCE' || raw === 'PENDING') {
-    bgClass = 'bg-[#E09F3E] text-white'
-  } else if (raw === 'RESERVED' || raw === 'BOOKED') {
-    bgClass = 'bg-[#2A4365] text-white'
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 shadow-2xs whitespace-nowrap">
+        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+        Maintenance
+      </span>
+    )
+  }
+
+  if (raw === 'RESERVED' || raw === 'BOOKED') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/60 shadow-2xs whitespace-nowrap">
+        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
+        Booked
+      </span>
+    )
   }
 
   return (
-    <span
-      className={`inline-block min-w-[58px] px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-center ${bgClass}`}
-    >
-      {raw}
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 shadow-2xs whitespace-nowrap">
+      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+      Available
     </span>
   )
 }
@@ -722,6 +746,7 @@ export default function RoomManagement() {
 
   const [statusFilter, setStatusFilter] = useState('All')
   const [moduleFilter, setModuleFilter] = useState('All')
+  const [viewMode, setViewMode] = useState('grid')
 
   const [dashboardStats, setDashboardStats] = useState({
     totalRooms: 0,
@@ -874,7 +899,6 @@ export default function RoomManagement() {
       const matchesSearch = !searchValue || searchableText.includes(searchValue)
       const roomStatus = String(room.status || '').toLowerCase()
       const filterLower = statusFilter.toLowerCase()
-      const blocked = isRoomBlocked(room)
 
       const matchesStatus =
         statusFilter === 'All' ||
@@ -1139,60 +1163,98 @@ export default function RoomManagement() {
   }
 
   return (
-    <div className="space-y-3.5">
-      <div>
-        <h1 className="font-display text-3xl font-bold">
-          Workspace Administration
-        </h1>
-        <p className="mt-1 text-sm text-slate">
-          Manage workspace inventory, capacity, availability, and facilities dynamically.
-        </p>
+    <div className="space-y-4">
+      {/* HEADER */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+              Workspace Administration
+            </h1>
+            <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-sky-50 border border-sky-200 px-2.5 py-0.5 text-xs font-semibold text-sky-700">
+              <Sparkles size={12} className="text-sky-500" />
+              Live Inventory
+            </span>
+          </div>
+          <p className="mt-1 text-xs sm:text-sm text-slate-500">
+            Configure room inventory, amenities, capacities, and real-time operational availability.
+          </p>
+        </div>
       </div>
 
       {successMessage && (
-        <div className="rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-xs font-medium text-green-700">
-          {successMessage}
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/90 px-3.5 py-2.5 text-xs font-semibold text-emerald-800 shadow-2xs">
+          <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+          <span>{successMessage}</span>
         </div>
       )}
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
-          {error}
+        <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50/90 px-3.5 py-2.5 text-xs font-semibold text-rose-800 shadow-2xs">
+          <AlertTriangle size={16} className="text-rose-600 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
-      {/* SUMMARY CARDS */}
-      <div className="grid gap-2 grid-cols-2 md:grid-cols-4">
-        <Card className="p-2.5 shadow-sm">
-          <p className="font-mono text-[9.5px] uppercase font-bold tracking-wider text-slate">Total</p>
-          <p className="mt-0.5 text-lg font-extrabold text-ink">{statusCounts.Total}</p>
-          <p className="text-[9.5px] text-slate">All workspaces</p>
-        </Card>
-        <Card className="p-2.5 shadow-sm">
-          <p className="font-mono text-[9.5px] uppercase font-bold tracking-wider text-slate">Available</p>
-          <p className="mt-0.5 text-lg font-extrabold text-[#658362]">{statusCounts.Available}</p>
-          <p className="text-[9.5px] text-slate">Ready to reserve</p>
-        </Card>
-        <Card className="p-2.5 shadow-sm">
-          <p className="font-mono text-[9.5px] uppercase font-bold tracking-wider text-slate">Reserved</p>
-          <p className="mt-0.5 text-lg font-extrabold text-[#2A4365]">{statusCounts.Reserved}</p>
-          <p className="text-[9.5px] text-slate">Currently booked</p>
-        </Card>
-        <Card className="p-2.5 shadow-sm">
-          <p className="font-mono text-[9.5px] uppercase font-bold tracking-wider text-slate">Maintenance</p>
-          <p className="mt-0.5 text-lg font-extrabold text-[#E09F3E]">{statusCounts.Maintenance}</p>
-          <p className="text-[9.5px] text-slate">Under maintenance</p>
-        </Card>
+      {/* KPI SUMMARY CARDS */}
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+        {/* Total */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-card hover:shadow-card-hover transition-all flex items-center justify-between">
+          <div>
+            <p className="font-mono text-[10px] uppercase font-bold tracking-wider text-slate-400">Total</p>
+            <p className="mt-0.5 text-2xl font-extrabold text-slate-900">{statusCounts.Total}</p>
+            <p className="text-[10px] text-slate-500 font-medium">All workspaces</p>
+          </div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+            <Layers size={20} />
+          </div>
+        </div>
+
+        {/* Available */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-card hover:shadow-card-hover transition-all flex items-center justify-between">
+          <div>
+            <p className="font-mono text-[10px] uppercase font-bold tracking-wider text-emerald-600">Available</p>
+            <p className="mt-0.5 text-2xl font-extrabold text-emerald-600">{statusCounts.Available}</p>
+            <p className="text-[10px] text-slate-500 font-medium">Ready to reserve</p>
+          </div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+            <CheckCircle2 size={20} />
+          </div>
+        </div>
+
+        {/* Reserved */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-card hover:shadow-card-hover transition-all flex items-center justify-between">
+          <div>
+            <p className="font-mono text-[10px] uppercase font-bold tracking-wider text-indigo-600">Reserved</p>
+            <p className="mt-0.5 text-2xl font-extrabold text-indigo-600">{statusCounts.Reserved}</p>
+            <p className="text-[10px] text-slate-500 font-medium">Active reservations</p>
+          </div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+            <Users size={20} />
+          </div>
+        </div>
+
+        {/* Maintenance */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-card hover:shadow-card-hover transition-all flex items-center justify-between">
+          <div>
+            <p className="font-mono text-[10px] uppercase font-bold tracking-wider text-amber-600">Maintenance</p>
+            <p className="mt-0.5 text-2xl font-extrabold text-amber-600">{statusCounts.Maintenance}</p>
+            <p className="text-[10px] text-slate-500 font-medium">Under service</p>
+          </div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+            <Wrench size={20} />
+          </div>
+        </div>
       </div>
 
-      {/* CONTROL BAR */}
-      <Card className="p-2.5 shadow-sm">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="font-display text-xs font-bold text-ink">Workspace Inventory</h2>
+      {/* CONTROL & FILTER BAR */}
+      <div className="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-card">
+        <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold text-slate-800">Filter Workspaces:</span>
             {search && (
-              <div className="inline-flex items-center gap-1 rounded-full bg-sky-100 border border-sky-200 px-2 py-0.2 text-[10px] font-semibold text-sky-800">
-                <span>Search: &ldquo;{search}&rdquo;</span>
+              <div className="inline-flex items-center gap-1 rounded-full bg-sky-50 border border-sky-200 px-2.5 py-0.5 text-[11px] font-semibold text-sky-800">
+                <span>&ldquo;{search}&rdquo;</span>
                 <button
                   type="button"
                   onClick={handleClearSearch}
@@ -1204,20 +1266,24 @@ export default function RoomManagement() {
               </div>
             )}
           </div>
-          <div className="flex flex-wrap items-center justify-end gap-2 sm:flex-nowrap">
+
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Status Filter */}
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full sm:w-auto rounded-xl border border-line bg-white px-2.5 py-1 text-xs text-ink outline-none h-7"
+              className="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-1.5 text-xs font-semibold text-slate-800 outline-none hover:border-slate-300 focus:bg-white focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 transition-all"
             >
               <option value="All">All Status</option>
               <option value="Available">Available</option>
               <option value="Maintenance">Maintenance</option>
             </select>
+
+            {/* Module Filter */}
             <select
               value={moduleFilter}
               onChange={(e) => setModuleFilter(e.target.value)}
-              className="w-full sm:w-auto rounded-xl border border-line bg-white px-2.5 py-1 text-xs text-ink outline-none h-7"
+              className="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-1.5 text-xs font-semibold text-slate-800 outline-none hover:border-slate-300 focus:bg-white focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 transition-all max-w-[200px] truncate"
             >
               {modules.map((mod) => (
                 <option key={mod} value={mod}>
@@ -1225,78 +1291,201 @@ export default function RoomManagement() {
                 </option>
               ))}
             </select>
-            <Button className="w-full sm:w-auto shrink-0 justify-center whitespace-nowrap px-3 py-1 text-xs font-bold h-7" onClick={openAddModal}>
-              + Add Workspace
-            </Button>
+
+            {/* View Mode Switcher */}
+            <div className="inline-flex items-center rounded-xl border border-slate-200 bg-slate-100/80 p-0.5">
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  viewMode === 'grid'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="Card Grid View"
+              >
+                <LayoutGrid size={13} />
+                <span className="hidden sm:inline">Cards</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('table')}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  viewMode === 'table'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="Table View"
+              >
+                <List size={13} />
+                <span className="hidden sm:inline">Table</span>
+              </button>
+            </div>
+
+            {/* Add Workspace Button */}
+            <button
+              type="button"
+              onClick={openAddModal}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm shadow-sky-500/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Plus size={14} className="stroke-[2.5]" />
+              <span>Add Workspace</span>
+            </button>
           </div>
         </div>
-      </Card>
-      {/* ROOM TABLE */}
-      <Card className="p-0 overflow-hidden shadow-sm">
-        <div className="overflow-x-hidden w-full">
-          <table className="w-full table-fixed text-left text-xs">
-            <thead>
-              <tr className="border-b border-line font-mono text-[9.5px] font-extrabold uppercase tracking-wider text-black bg-slate-50/70">
-                <th className="w-[14%] px-2 py-1.5 whitespace-nowrap">Room Name</th>
-                <th className="w-[13%] px-2 py-1.5 whitespace-nowrap">Room Number</th>
-                <th className="w-[16%] px-2 py-1.5 whitespace-nowrap">Module</th>
-                <th className="w-[9%] px-2 py-1.5 whitespace-nowrap">Type</th>
-                <th className="w-[6.5%] px-2 py-1.5 whitespace-nowrap">Capacity</th>
-                <th className="w-[16%] px-2 py-1.5 whitespace-nowrap">Facilities</th>
-                <th className="w-[12.5%] px-1.5 py-1.5 text-center whitespace-nowrap">Status</th>
-                <th className="w-[13%] px-1 py-1.5 text-center whitespace-nowrap">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {loading ? (
-                <tr>
-                  <td colSpan={8} className="px-2 py-4 text-center text-slate">
-                    Loading room inventory...
-                  </td>
+      </div>
+
+      {/* CONTENT: GRID CARDS OR TABLE */}
+      {loading ? (
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-12 text-center text-slate-500 shadow-card">
+          <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-sky-600 border-t-transparent"></div>
+          <p className="mt-3 text-xs font-semibold text-slate-600">Loading workspace inventory...</p>
+        </div>
+      ) : filteredRooms.length === 0 ? (
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-12 text-center text-slate-500 shadow-card">
+          <p className="text-sm font-semibold text-slate-700">No workspaces match your filter criteria.</p>
+          <p className="mt-1 text-xs text-slate-400">Try clearing your filters or adding a new workspace.</p>
+        </div>
+      ) : viewMode === 'grid' ? (
+        /* VISUAL CARDS GRID */
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
+          {filteredRooms.map((room) => (
+            <div
+              key={room.id}
+              className="rounded-2xl border border-slate-200/85 bg-white p-4 shadow-card hover:shadow-card-hover hover:border-sky-300 transition-all flex flex-col justify-between group"
+            >
+              <div>
+                {/* Card Header */}
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h3 className="font-display text-sm font-bold text-slate-900 group-hover:text-sky-700 transition-colors">
+                      {room.roomName}
+                    </h3>
+                    <div className="mt-1 inline-flex items-center gap-1.5">
+                      <span className="font-mono text-[10.5px] font-semibold text-slate-700 bg-slate-100 border border-slate-200/80 px-2 py-0.5 rounded-md">
+                        {room.roomNumber}
+                      </span>
+                      <span className="text-[10px] font-bold text-sky-700 bg-sky-50 border border-sky-200/60 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                        {room.roomType}
+                      </span>
+                    </div>
+                  </div>
+                  <CustomStatusTag status={room.status} />
+                </div>
+
+                {/* Module Location */}
+                <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-600">
+                  <MapPin size={13} className="text-slate-400 shrink-0" />
+                  <span className="truncate" title={room.module}>{room.module}</span>
+                </div>
+
+                {/* Capacity Gauge */}
+                <div className="mt-2.5 flex items-center justify-between rounded-xl bg-slate-50/80 border border-slate-100 px-3 py-1.5">
+                  <span className="text-[11px] font-semibold text-slate-600">Capacity</span>
+                  <div className="flex items-center gap-1 font-bold text-xs text-slate-900">
+                    <Users size={13} className="text-slate-500" />
+                    <span>{room.capacity} seats</span>
+                  </div>
+                </div>
+
+                {/* Facilities List */}
+                <div className="mt-3">
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Amenities & Facilities</p>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {room.facilities?.length > 0 ? (
+                      room.facilities.map((fac, idx) => (
+                        <span
+                          key={fac.id ?? idx}
+                          className="inline-flex items-center gap-1 rounded-md bg-slate-100 border border-slate-200/70 px-1.5 py-0.5 text-[9.5px] font-medium text-slate-700"
+                        >
+                          ✓ {fac.name}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-[10px] text-slate-400 italic">No facilities assigned</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Card Footer Actions */}
+              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => openViewModal(room)}
+                  className="text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors"
+                >
+                  View Details
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openEditModal(room)}
+                  className="rounded-lg bg-sky-50 border border-sky-200/80 px-3 py-1 text-xs font-bold text-sky-700 hover:bg-sky-100 transition-all"
+                >
+                  Edit Room
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        /* TABLE VIEW */
+        <div className="rounded-2xl border border-slate-200/80 bg-white overflow-hidden shadow-card">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-50/80">
+                  <th className="px-3.5 py-2.5">Room Name</th>
+                  <th className="px-3 py-2.5">Room Number</th>
+                  <th className="px-3 py-2.5">Module</th>
+                  <th className="px-3 py-2.5">Type</th>
+                  <th className="px-3 py-2.5">Capacity</th>
+                  <th className="px-3 py-2.5">Facilities</th>
+                  <th className="px-3 py-2.5 text-center">Status</th>
+                  <th className="px-3 py-2.5 text-center">Actions</th>
                 </tr>
-              ) : filteredRooms.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-2 py-4 text-center text-slate">
-                    No rooms match your filter criteria.
-                  </td>
-                </tr>
-              ) : (
-                filteredRooms.map((room) => (
-                  <tr key={room.id} className="transition-colors hover:bg-portal-bg/70 leading-tight">
-                    <td className="px-2 py-1.5 font-sans font-semibold text-xs text-ink truncate" title={room.roomName}>{room.roomName}</td>
-                    <td className="px-2 py-1.5 font-sans text-xs font-semibold text-ink truncate" title={room.roomNumber}>{room.roomNumber}</td>
-                    <td className="px-2 py-1.5 text-slate truncate" title={room.module}>{room.module}</td>
-                    <td className="px-2 py-1.5 text-slate truncate">{room.roomType}</td>
-                    <td className="px-2 py-1.5 text-slate">{room.capacity}</td>
-                    <td className="px-2 py-1.5 text-slate">
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredRooms.map((room) => (
+                  <tr key={room.id} className="transition-colors hover:bg-sky-50/40">
+                    <td className="px-3.5 py-2.5 font-semibold text-slate-900">{room.roomName}</td>
+                    <td className="px-3 py-2.5 font-mono text-[11px] font-bold text-slate-700">{room.roomNumber}</td>
+                    <td className="px-3 py-2.5 text-slate-600 truncate max-w-[180px]" title={room.module}>{room.module}</td>
+                    <td className="px-3 py-2.5">
+                      <span className="rounded-md bg-sky-50 border border-sky-200/60 px-2 py-0.5 text-[10px] font-bold text-sky-700">
+                        {room.roomType}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 font-medium text-slate-700">{room.capacity} seats</td>
+                    <td className="px-3 py-2.5 text-slate-600">
                       {room.facilities?.length > 0 ? (
-                        <div className="flex flex-wrap items-center gap-1">
+                        <div className="flex flex-wrap items-center gap-1 max-w-[200px]">
                           {room.facilities.map((fac, idx) => (
                             <span
                               key={fac.id ?? idx}
-                              className="rounded bg-slate-100 border border-slate-200/60 px-1 py-0.2 text-[8.5px] font-medium text-slate-700 whitespace-nowrap"
+                              className="rounded bg-slate-100 border border-slate-200/60 px-2 py-0.5 text-[9px] font-medium text-slate-700 whitespace-nowrap"
                             >
                               {fac.name}
                             </span>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-slate text-[10px]">-</span>
+                        <span className="text-slate-400 text-[10px]">-</span>
                       )}
                     </td>
-                    <td className="px-1.5 py-1.5 text-center">
+                    <td className="px-3 py-2.5 text-center">
                       <CustomStatusTag status={room.status} />
                     </td>
-                    <td className="px-1 py-1.5 text-center whitespace-nowrap">
-                      <div className="inline-flex items-center justify-center gap-2 font-sans text-xs whitespace-nowrap">
+                    <td className="px-3 py-2.5 text-center whitespace-nowrap">
+                      <div className="inline-flex items-center justify-center gap-2">
                         <button
                           type="button"
                           onClick={() => openViewModal(room)}
-                          className="font-bold text-sky-600 hover:underline text-xs"
+                          className="font-bold text-slate-600 hover:text-slate-900 text-xs"
                         >
                           View
                         </button>
-                        <span className="text-line">|</span>
+                        <span className="text-slate-300">|</span>
                         <button
                           type="button"
                           onClick={() => openEditModal(room)}
@@ -1307,12 +1496,12 @@ export default function RoomManagement() {
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </Card>
+      )}
 
       {/* MODAL */}
       <Modal

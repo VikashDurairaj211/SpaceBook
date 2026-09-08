@@ -9,6 +9,21 @@ import { useToast } from '../components/common/ToastProvider'
 import Button from '../components/common/Button'
 import Card from '../components/common/Card'
 import Modal from '../components/common/Modal'
+import {
+  Building2,
+  Calendar,
+  Clock,
+  Users,
+  Sparkles,
+  CheckCircle2,
+  ShieldCheck,
+  MapPin,
+  ArrowRight,
+  Video,
+  Wifi,
+  Monitor,
+  Info,
+} from 'lucide-react'
 
 // =====================================================
 // HELPER - GET LOCAL DATE
@@ -859,261 +874,283 @@ export default function BookRoom() {
   // =====================================================
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-2xl space-y-4">
+      {/* COMPACT HEADER */}
+      <div className="flex items-center justify-between pb-1">
+        <div>
+          <h1 className="font-display text-xl font-extrabold tracking-tight text-slate-900">
+            Reserve a Workspace
+          </h1>
+          <p className="text-xs text-slate-500">
+            Book verified conference and discussion spaces across campuses
+          </p>
+        </div>
 
-      <h1 className="font-display text-3xl font-bold">
-        Booking
-      </h1>
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 text-[11px] font-bold text-emerald-700 shadow-2xs">
+          <Sparkles size={12} className="text-emerald-600" />
+          <span>Auto-Approval</span>
+        </div>
+      </div>
 
-      <Card>
-
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-4"
-        >
-
-          {/* MEETING TITLE */}
-
-          <Field label="Meeting Title">
+      {/* COMPACT RESERVATION FORM */}
+      <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-card">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* STEP 1: MEETING TITLE */}
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-sky-100 text-[10px] font-extrabold text-sky-700">
+                1
+              </span>
+              <span>Meeting Title</span>
+            </label>
 
             <Input
               value={form.title}
-              onChange={(e) =>
-                update(
-                  'title',
-                  e.target.value
-                )
-              }
-              placeholder="e.g. sprint"
+              onChange={(e) => update('title', e.target.value)}
+              placeholder="e.g. Sprint Planning & Architecture Review"
+              className="w-full text-xs sm:text-sm font-medium"
             />
 
             {errors.title && (
-              <p className="mt-1 text-sm font-medium text-red-600">
+              <p className="mt-1 text-[11px] font-semibold text-rose-600">
                 {errors.title}
               </p>
             )}
+          </div>
 
-          </Field>
+          {/* STEP 2: CAMPUS MODULE & ROOM */}
+          <div className="space-y-2 pt-2 border-t border-slate-100">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-sky-100 text-[10px] font-extrabold text-sky-700">
+                2
+              </span>
+              <span>Campus & Space</span>
+            </label>
 
-          {/* MODULE + ROOM */}
-
-          <div className="grid grid-cols-2 gap-4">
-
-            <Field label="Module">
-
-              <Select
-                value={form.module}
-                onChange={(e) =>
-                  handleModuleChange(
-                    e.target.value
-                  )
-                }
-                disabled={loadingRooms}
-              >
-
-                <option value="">
-                  {loadingRooms
-                    ? 'Loading modules...'
-                    : 'Select module'}
-                </option>
-
-                {modules.map((m) => (
-                  <option
-                    key={m}
-                    value={m}
-                  >
-                    {m}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <Field label="Module / Campus">
+                <Select
+                  value={form.module}
+                  onChange={(e) => handleModuleChange(e.target.value)}
+                  disabled={loadingRooms}
+                  className="w-full text-xs font-medium"
+                >
+                  <option value="">
+                    {loadingRooms ? 'Loading modules...' : 'Select module'}
                   </option>
-                ))}
-
-              </Select>
-
-              {errors.module && (
-                <p className="mt-1 text-sm font-medium text-red-600">
-                  {errors.module}
-                </p>
-              )}
-
-            </Field>
-
-            <Field label="Room">
-
-              <Select
-                value={form.roomId}
-                onChange={(e) =>
-                  update(
-                    'roomId',
-                    e.target.value
-                  )
-                }
-                disabled={
-                  !form.module ||
-                  loadingRooms
-                }
-              >
-
-                <option value="">
-                  {form.module
-                    ? 'Select room'
-                    : 'Choose a module first'}
-                </option>
-
-                {roomsInModule.map(
-                  (r, index) => (
-                    <option
-                      key={r.roomId}
-                      value={r.roomId}
-                    >
-                      {r.roomName ||
-                        `Room ${index + 1}`}
+                  {modules.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
                     </option>
-                  )
+                  ))}
+                </Select>
+
+                {errors.module && (
+                  <p className="mt-1 text-[11px] font-semibold text-rose-600">
+                    {errors.module}
+                  </p>
                 )}
+              </Field>
 
-              </Select>
+              <Field label="Room">
+                <Select
+                  value={form.roomId}
+                  onChange={(e) => update('roomId', e.target.value)}
+                  disabled={!form.module || loadingRooms}
+                  className="w-full text-xs font-medium"
+                >
+                  <option value="">
+                    {form.module ? 'Select room' : 'Choose module first'}
+                  </option>
+                  {roomsInModule.map((r, index) => (
+                    <option key={r.roomId} value={r.roomId}>
+                      {r.roomName || `Room ${index + 1}`} ({r.capacity || 20} Seats)
+                    </option>
+                  ))}
+                </Select>
 
-              {errors.roomId && (
-                <p className="mt-1 text-sm font-medium text-red-600">
-                  {errors.roomId}
-                </p>
-              )}
+                {errors.roomId && (
+                  <p className="mt-1 text-[11px] font-semibold text-rose-600">
+                    {errors.roomId}
+                  </p>
+                )}
+              </Field>
+            </div>
 
-            </Field>
-
-          </div>
-
-          {/* DATE + TIME */}
-
-          <div className="grid grid-cols-3 gap-4">
-
-            <BusinessDatePicker
-              label="Date"
-              min={todayStr}
-              max={maxDateStr}
-              value={form.date}
-              error={errors.date}
-              onChange={(value) =>
-                update('date', value)
-              }
-            />
-
-            <ScrollableTimePicker
-              label="Start Time"
-              value={form.startTime}
-              selectedDate={form.date}
-              onChange={(value) => update('startTime', value)}
-              error={errors.startTime}
-            />
-
-            <ScrollableTimePicker
-              label="End Time"
-              value={form.endTime}
-              selectedDate={form.date}
-              minTime={form.startTime}
-              onChange={(value) => update('endTime', value)}
-              error={errors.endTime}
-            />
-
-          </div>
-
-          {/* ATTENDEES */}
-
-          <Field label="Number of Attendees">
-
-            <Input
-              type="number"
-              min="1"
-              max={
-                selectedRoomDetails?.capacity
-              }
-              placeholder="e.g. 5"
-              className="w-32"
-              value={form.attendees}
-              onChange={(e) =>
-                update(
-                  'attendees',
-                  e.target.value
-                )
-              }
-            />
-
+            {/* COMPACT ROOM SPOTLIGHT */}
             {selectedRoomDetails && (
-              <p className="mt-1 text-sm text-slate-500">
+              <div className="rounded-xl border border-sky-200/80 bg-gradient-to-r from-sky-50/70 to-indigo-50/50 p-2.5 animate-in fade-in duration-200">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-900">
+                      {selectedRoomDetails.roomName}
+                    </span>
+                    <span className="rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5">
+                      Max {selectedRoomDetails.capacity} Seats
+                    </span>
+                  </div>
 
-                Maximum capacity for this
-                room:{' '}
-
-                <span className="font-semibold">
-                  {
-                    selectedRoomDetails.capacity
-                  }
-                </span>{' '}
-                participants
-
-              </p>
+                  {/* AMENITIES */}
+                  <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-600">
+                    <span className="inline-flex items-center gap-1 bg-white/90 border border-slate-200 px-1.5 py-0.5 rounded-md">
+                      <Wifi size={10} className="text-sky-600" />
+                      <span>Wi-Fi</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1 bg-white/90 border border-slate-200 px-1.5 py-0.5 rounded-md">
+                      <Monitor size={10} className="text-indigo-600" />
+                      <span>Display / Projector</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1 bg-white/90 border border-slate-200 px-1.5 py-0.5 rounded-md">
+                      <Video size={10} className="text-purple-600" />
+                      <span>Video Conf</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
             )}
+          </div>
+
+          {/* STEP 3: DATE & TIME SCHEDULE */}
+          <div className="space-y-2 pt-2 border-t border-slate-100">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-sky-100 text-[10px] font-extrabold text-sky-700">
+                3
+              </span>
+              <span>Schedule & Time</span>
+            </label>
+
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
+              <div className="sm:col-span-6">
+                <BusinessDatePicker
+                  label="Date"
+                  min={todayStr}
+                  max={maxDateStr}
+                  value={form.date}
+                  error={errors.date}
+                  onChange={(value) => update('date', value)}
+                />
+              </div>
+
+              <div className="sm:col-span-3">
+                <ScrollableTimePicker
+                  label="Start Time"
+                  value={form.startTime}
+                  selectedDate={form.date}
+                  onChange={(value) => update('startTime', value)}
+                  error={errors.startTime}
+                />
+              </div>
+
+              <div className="sm:col-span-3">
+                <ScrollableTimePicker
+                  label="End Time"
+                  value={form.endTime}
+                  selectedDate={form.date}
+                  minTime={form.startTime}
+                  onChange={(value) => update('endTime', value)}
+                  error={errors.endTime}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* STEP 4: NUMBER OF ATTENDEES */}
+          <div className="space-y-2 pt-2 border-t border-slate-100">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-sky-100 text-[10px] font-extrabold text-sky-700">
+                4
+              </span>
+              <span>Number of Attendees</span>
+            </label>
+
+            <div className="flex items-center gap-3">
+              <Input
+                type="number"
+                min="1"
+                max={selectedRoomDetails?.capacity}
+                placeholder="e.g. 5"
+                className="w-28 text-xs font-semibold"
+                value={form.attendees}
+                onChange={(e) => update('attendees', e.target.value)}
+              />
+
+              {selectedRoomDetails ? (
+                <span className="text-xs text-slate-500 font-medium">
+                  Room limit:{' '}
+                  <strong className="text-slate-800 font-bold">
+                    {selectedRoomDetails.capacity} seats
+                  </strong>{' '}
+                  {Number(form.attendees) > Number(selectedRoomDetails.capacity) && (
+                    <span className="text-rose-600 font-bold ml-1">
+                      (Exceeds capacity!)
+                    </span>
+                  )}
+                </span>
+              ) : (
+                <span className="text-xs text-slate-400">
+                  Select a room to view capacity limits
+                </span>
+              )}
+            </div>
 
             {errors.attendees && (
-              <p className="mt-1 text-sm font-medium text-red-600">
+              <p className="mt-1 text-[11px] font-semibold text-rose-600">
                 {errors.attendees}
               </p>
             )}
+          </div>
 
-          </Field>
+          {/* CONFIRM BUTTON */}
+          <div className="pt-3 border-t border-slate-100">
+            <button
+              type="submit"
+              disabled={
+                submitting ||
+                (selectedRoomDetails &&
+                  Number(form.attendees) >
+                    Number(selectedRoomDetails.capacity))
+              }
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 px-5 py-3 text-xs sm:text-sm font-bold text-white shadow-md shadow-sky-500/25 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none"
+            >
+              {submitting ? (
+                <>
+                  <svg
+                    className="h-4 w-4 animate-spin text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  <span>Processing Reservation...</span>
+                </>
+              ) : (
+                <>
+                  <span>Confirm Workspace Reservation</span>
+                  <ArrowRight size={14} />
+                </>
+              )}
+            </button>
 
-          {/* CONFIRM BOOKING */}
-
-          <Button
-            type="submit"
-            className="w-full flex items-center justify-center gap-2"
-            disabled={
-              submitting ||
-              (
-                selectedRoomDetails &&
-                Number(form.attendees) >
-                Number(
-                  selectedRoomDetails.capacity
-                )
-              )
-            }
-          >
-            {submitting ? (
-              <>
-                <svg
-                  className="h-4 w-4 animate-spin text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                <span>Confirming...</span>
-              </>
-            ) : (
-              'Confirm Booking'
+            {submitting && (
+              <p className="mt-1.5 text-center text-[11px] text-sky-600 font-semibold animate-pulse">
+                Connecting to server and locking room slot...
+              </p>
             )}
-          </Button>
-
-          {submitting && (
-            <p className="text-center text-xs text-sky-600 font-medium animate-pulse">
-              Connecting to server and reserving room...
-            </p>
-          )}
-
+          </div>
         </form>
-
-      </Card>
+      </div>
 
       {/* =====================================================
           CONFIRMATION MODAL

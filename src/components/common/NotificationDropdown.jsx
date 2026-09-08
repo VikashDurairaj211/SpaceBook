@@ -1,7 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  Bell,
+  CheckCircle2,
+  Clock,
+  Building2,
+  MapPin,
+  Calendar,
+  Trash2,
+  CheckCheck,
+  ArrowRight,
+  ShieldAlert,
+  X,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import Button from "./Button";
 import {
   getNotifications,
   markAllNotificationsAsRead,
@@ -87,7 +99,6 @@ export default function NotificationDropdown({
     const readIds = new Set(getReadNotificationIds().map(String));
     const clearedIds = new Set(getClearedNotificationIds().map(String));
 
-    // If initialNotifications was already provided by TopNav, use it
     if (initialNotifications && initialNotifications.length > 0) {
       const active = initialNotifications.filter(
         (n) => !clearedIds.has(String(n.notificationId || n.id))
@@ -157,6 +168,8 @@ export default function NotificationDropdown({
       await onMarkAllRead();
     } else {
       try {
+        const allIds = notifications.map((n) => String(n.notificationId || n.id));
+        saveReadNotificationIds(allIds);
         await markAllNotificationsAsRead();
       } catch (e) {
         // ignore
@@ -221,7 +234,6 @@ export default function NotificationDropdown({
 
     if (onClose) onClose();
 
-    // If Admin, redirect directly to Admin Notifications page
     if (isAdmin) {
       const targetHighlight = id || n.notificationId || "";
       const adminParams = new URLSearchParams();
@@ -245,7 +257,6 @@ export default function NotificationDropdown({
       String(n.message || "").match(/#(\d+)/)?.[1] ??
       "";
 
-    // Extract clean room name from object or message
     const rawMsg = String(n.message || "");
     const rawTitle = String(n.title || "");
     const combined = `${rawTitle} ${rawMsg}`;
@@ -285,58 +296,92 @@ export default function NotificationDropdown({
       }
     }
 
-    const quoteMatch = combined.match(/'([^']+)'|"([^"]+)"/);
-    const extractedTitle = quoteMatch ? (quoteMatch[1] || quoteMatch[2]) : "";
-
     const params = new URLSearchParams();
     if (bookingId) params.set("highlight", String(bookingId).replace(/^#/, ""));
     if (extractedRoom) params.set("room", extractedRoom);
     if (extractedSeat) params.set("seat", extractedSeat);
     if (bookingDate) params.set("date", bookingDate);
-    if (extractedTitle) params.set("title", extractedTitle);
 
     navigate(`/my-bookings?${params.toString()}`);
   };
 
+  const getNotificationCategory = (item) => {
+    const text = `${item.title || ""} ${item.message || ""}`.toLowerCase();
+    if (text.includes("cancel") || text.includes("rejected") || text.includes("declined")) {
+      return { icon: ShieldAlert, iconBg: "bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400" };
+    }
+    if (text.includes("check-in") || text.includes("check in") || text.includes("expire") || text.includes("reminder")) {
+      return { icon: Clock, iconBg: "bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400" };
+    }
+    if (text.includes("hotseat") || text.includes("desk") || text.includes("workstation") || text.includes("ws-")) {
+      return { icon: MapPin, iconBg: "bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400" };
+    }
+    return { icon: Building2, iconBg: "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400" };
+  };
+
   if (!open) return null;
 
-  const hasUnread = notifications.some((n) => !n.isRead && !n.read && n.unread !== false);
+  const unreadCount = notifications.filter((n) => !n.isRead && !n.read && n.unread !== false).length;
 
   return (
     <div
       ref={panelRef}
-      className="absolute right-0 top-full z-50 mt-2 w-[22rem] max-w-[calc(100vw-1rem)] overflow-hidden rounded-2xl border border-slate-200 bg-white text-ink shadow-xl font-sans"
-      style={{ minWidth: "18rem" }}
+      className="absolute right-0 top-full z-50 mt-2.5 w-96 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
     >
-      {/* Header */}
-      <div className="border-b border-line px-4 py-3.5">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="font-display text-sm font-bold text-ink">Notifications</p>
-            <p className="mt-0.5 text-xs text-slate">Recent alerts for your account.</p>
+      {/* HEADER */}
+      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-slate-50 to-sky-50/40 dark:from-slate-900 dark:to-slate-800/80 px-4 py-3.5">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-sky-100 dark:bg-sky-950/70 text-sky-700 dark:text-sky-300">
+            <Bell size={14} />
           </div>
           <div>
-            {notifications.length > 0 && (
-              <button
-                type="button"
-                onClick={handleClearAll}
-                disabled={loading}
-                className="rounded-lg border border-line bg-white px-2.5 py-1 text-xs font-semibold text-ink hover:bg-portal-bg transition"
-              >
-                Clear all
-              </button>
-            )}
+            <h2 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <span>Notifications</span>
+              {unreadCount > 0 && (
+                <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[9px] font-extrabold text-white whitespace-nowrap shrink-0">
+                  {unreadCount}
+                </span>
+              )}
+            </h2>
           </div>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={handleMarkAll}
+              className="text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 hover:underline transition"
+              title="Mark all as read"
+            >
+              Mark all read
+            </button>
+          )}
+
+          {notifications.length > 0 && (
+            <button
+              type="button"
+              onClick={handleClearAll}
+              className="rounded-lg p-1 text-slate-400 dark:text-slate-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 dark:hover:text-rose-400 transition"
+              title="Clear all notifications"
+            >
+              <Trash2 size={13} />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Body */}
-      <div className="max-h-80 space-y-2.5 overflow-auto px-4 py-3">
+      {/* NOTIFICATIONS LIST */}
+      <div className="max-h-80 space-y-1.5 overflow-y-auto p-2.5 bg-slate-50/40 dark:bg-slate-950/60">
         {loading && notifications.length === 0 ? (
-          <div className="p-4 text-center text-xs text-slate">Loading notifications...</div>
+          <div className="p-6 text-center text-xs text-slate-400 dark:text-slate-500">Loading notifications...</div>
         ) : notifications.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 bg-portal-bg p-4 text-center text-sm text-slate">
-            No notifications available.
+          <div className="flex flex-col items-center justify-center p-8 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 mb-2">
+              <CheckCircle2 size={22} />
+            </div>
+            <p className="text-xs font-bold text-slate-800 dark:text-slate-200">All caught up!</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">No recent alerts for your account.</p>
           </div>
         ) : (
           notifications.map((n, index) => {
@@ -345,6 +390,8 @@ export default function NotificationDropdown({
             const message = n.message || "";
             const time = n.timeAgo && !n.timeAgo.includes("0001") ? n.timeAgo : "Just now";
             const isUnread = n.isRead !== undefined ? !n.isRead : n.unread;
+            const cat = getNotificationCategory(n);
+            const Icon = cat.icon;
 
             return (
               <div
@@ -352,51 +399,46 @@ export default function NotificationDropdown({
                 role="button"
                 tabIndex={0}
                 onClick={() => handleSelectNotification(n)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    handleSelectNotification(n);
-                  }
-                }}
-                className={`group relative rounded-2xl border p-3 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400 ${
+                className={`group relative rounded-2xl border p-3 cursor-pointer transition-all duration-200 hover:shadow-md ${
                   isUnread
-                    ? "border-amber-200 bg-amber-50/50 hover:bg-amber-50/80"
-                    : "border-slate-200 bg-portal-bg/60 hover:bg-white"
+                    ? "border-amber-200 dark:border-amber-900/60 bg-gradient-to-r from-amber-50/70 to-white dark:from-amber-950/30 dark:to-slate-900/90 hover:border-amber-300 dark:hover:border-amber-700"
+                    : "border-slate-200/70 dark:border-slate-800/80 bg-white dark:bg-slate-900/80 hover:border-sky-300 dark:hover:border-sky-700"
                 }`}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-display text-xs font-bold text-ink truncate group-hover:text-sky-700">
-                        {title}
-                      </p>
-                      {isUnread && (
-                        <span className="rounded-full bg-amber-500 px-1.5 py-0.2 text-[9px] font-semibold uppercase tracking-wider text-white shrink-0">
-                          New
-                        </span>
-                      )}
-                    </div>
-                    {message && (
-                      <p className="mt-1 text-xs text-slate line-clamp-2">{message}</p>
-                    )}
+                {isUnread && (
+                  <span className="absolute top-3 right-3 h-2 w-2 rounded-full bg-amber-500" />
+                )}
+
+                <div className="flex items-start gap-2.5">
+                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${cat.iconBg} mt-0.5`}>
+                    <Icon size={14} />
+                  </div>
+
+                  <div className="flex-1 min-w-0 pr-4">
+                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate group-hover:text-sky-700 dark:group-hover:text-sky-400 transition-colors">
+                      {title}
+                    </p>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 mt-0.5 leading-relaxed font-normal">
+                      {message}
+                    </p>
                     <div className="mt-1.5 flex items-center justify-between">
-                      <span className="font-mono text-[10px] uppercase tracking-wider text-slate/80">
+                      <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
                         {time}
                       </span>
-                      <span className="text-[10.5px] font-semibold text-sky-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                        View Record →
+                      <span className="text-[10px] font-bold text-sky-600 dark:text-sky-400 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+                        <span>View</span>
+                        <ArrowRight size={10} />
                       </span>
                     </div>
                   </div>
 
-                  {/* Dismiss Single Notification Button */}
                   <button
                     type="button"
                     onClick={(e) => handleClearSingle(e, id)}
-                    className="shrink-0 rounded-md p-1 text-slate/60 hover:bg-slate-200 hover:text-ink transition"
-                    title="Dismiss notification"
+                    className="shrink-0 rounded-lg p-1 text-slate-300 dark:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-rose-600 dark:hover:text-rose-400 transition"
+                    title="Dismiss"
                   >
-                    ✕
+                    <X size={13} />
                   </button>
                 </div>
               </div>
@@ -405,17 +447,19 @@ export default function NotificationDropdown({
         )}
       </div>
 
-      {/* Footer */}
-      <div className="border-t border-line px-4 py-2.5 bg-slate-50/50">
+      {/* FOOTER */}
+      <div className="border-t border-slate-100 dark:border-slate-800 p-2 bg-white dark:bg-slate-900">
         <button
           type="button"
           onClick={() => {
             if (onViewAll) onViewAll();
             if (onClose) onClose();
+            navigate("/notifications");
           }}
-          className="w-full rounded-xl border border-slate-200 bg-white py-2 text-xs font-semibold text-ink transition hover:bg-slate-100"
+          className="w-full rounded-xl bg-slate-50 dark:bg-slate-800/80 hover:bg-sky-50 dark:hover:bg-sky-950/50 text-slate-700 dark:text-slate-300 hover:text-sky-700 dark:hover:text-sky-300 py-2 text-xs font-bold transition flex items-center justify-center gap-1.5"
         >
-          View all notifications
+          <span>Open Full Notification Center</span>
+          <ArrowRight size={12} />
         </button>
       </div>
     </div>

@@ -169,15 +169,15 @@ function CustomChartTooltip({ active, payload, label }) {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white/95 p-3 shadow-xl backdrop-blur-sm">
-      <p className="font-semibold text-xs text-slate-800">{label}</p>
+    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 p-3 shadow-xl backdrop-blur-sm">
+      <p className="font-semibold text-xs text-slate-800 dark:text-slate-100">{label}</p>
       <div className="mt-1 space-y-1">
         {payload.map((item, idx) => (
           <div
             key={idx}
             className="flex items-center justify-between gap-4 text-xs"
           >
-            <span className="flex items-center gap-1.5 text-slate-600">
+            <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
               <span
                 className="inline-block h-2.5 w-2.5 rounded-full"
                 style={{
@@ -186,7 +186,7 @@ function CustomChartTooltip({ active, payload, label }) {
               />
               {item.name}:
             </span>
-            <span className="font-bold text-slate-900">
+            <span className="font-bold text-slate-900 dark:text-white">
               {item.value} {item.unit || ''}
             </span>
           </div>
@@ -767,18 +767,32 @@ export default function Reports() {
     ]
   }, [kpis])
 
-  // 3. Timeline Trend
+  // 3. Timeline Trend (Enterprise Daily/Weekly/Monthly Granularity)
   const timelineData = useMemo(() => {
     const map = new Map()
     filteredBookings.forEach((b) => {
       const dateStr = b.date
       if (!dateStr) return
       let label = dateStr
+
       if (trendPeriod === 'Monthly') {
-        const [y, m] = dateStr.split('-')
+        const [y, m] = dateStr.split(/[-/]/)
         if (y && m) {
           const dt = new Date(Number(y), Number(m) - 1, 1)
           label = dt.toLocaleString('en-US', { month: 'short', year: 'numeric' })
+        }
+      } else if (trendPeriod === 'Weekly') {
+        const dt = new Date(dateStr)
+        if (!isNaN(dt.getTime())) {
+          const day = dt.getDay()
+          const diff = dt.getDate() - day + (day === 0 ? -6 : 1)
+          const monday = new Date(dt.setDate(diff))
+          label = `Wk ${monday.getMonth() + 1}/${monday.getDate()}`
+        }
+      } else if (trendPeriod === 'Daily') {
+        const dt = new Date(dateStr)
+        if (!isNaN(dt.getTime())) {
+          label = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
         }
       }
       map.set(label, (map.get(label) || 0) + 1)
@@ -793,6 +807,72 @@ export default function Reports() {
       bookings,
     }))
   }, [filteredBookings, trendPeriod])
+
+  // 4. Campus & Module Utilization Rates (Enterprise 1500+ scale)
+  const campusUtilization = useMemo(() => {
+    let tidelCount = 0
+    let elcot1Count = 0
+    let elcot2Count = 0
+    let roomCount = 0
+
+    filteredBookings.forEach((b) => {
+      const st = normalizeStatus(b.status)
+      if (st === 'CANCELLED' || st === 'REJECTED') return
+
+      const mod = String(b.module || '').toLowerCase()
+      const rName = String(b.roomName || '').toLowerCase()
+
+      if (mod.includes('tidel') || mod.includes('tidal') || rName.includes('tidel')) {
+        tidelCount++
+      } else if (mod.includes('module 2') || mod.includes('m2') || rName.includes('eo2')) {
+        elcot2Count++
+      } else if (mod.includes('module 1') || mod.includes('m1') || rName.includes('eo1')) {
+        elcot1Count++
+      } else {
+        roomCount++
+      }
+    })
+
+    const tidelCap = 229
+    const elcot1Cap = 98
+    const elcot2Cap = 98
+    const roomCap = 15
+
+    return [
+      {
+        name: 'Module 1 - Tidel Park',
+        location: 'Coimbatore Campus',
+        booked: tidelCount,
+        capacity: tidelCap,
+        rate: Math.min(100, Math.round((tidelCount / tidelCap) * 100)),
+        badge: '229 Desks',
+      },
+      {
+        name: 'Module 1 - Elcot Park',
+        location: 'Coimbatore Campus',
+        booked: elcot1Count,
+        capacity: elcot1Cap,
+        rate: Math.min(100, Math.round((elcot1Count / elcot1Cap) * 100)),
+        badge: '98 Desks',
+      },
+      {
+        name: 'Module 2 - Elcot Park',
+        location: 'Coimbatore Campus',
+        booked: elcot2Count,
+        capacity: elcot2Cap,
+        rate: Math.min(100, Math.round((elcot2Count / elcot2Cap) * 100)),
+        badge: '98 Desks',
+      },
+      {
+        name: 'Meeting & Conference Rooms',
+        location: 'All Campuses',
+        booked: roomCount,
+        capacity: roomCap,
+        rate: Math.min(100, Math.round((roomCount / roomCap) * 100)),
+        badge: '15 Total Rooms',
+      },
+    ]
+  }, [filteredBookings])
 
   // 4. Room Popularity
   const roomPopularityData = useMemo(() => {
@@ -869,19 +949,18 @@ export default function Reports() {
         </div>
 
         <div className="flex items-center gap-2 flex-nowrap flex-shrink-0">
-          <Button
-            size="sm"
-            variant="secondary"
+          <button
+            type="button"
             onClick={loadData}
             disabled={loading}
-            className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap shadow-xs hover:border-slate-400 transition-all active:scale-95 h-7"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 hover:border-slate-300 shadow-xs transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed h-7"
           >
             <RefreshCw
               size={11}
               className={loading ? 'animate-spin text-sky-600' : 'text-slate-600'}
             />
             <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
-          </Button>
+          </button>
 
           <Button
             size="sm"
@@ -1051,6 +1130,58 @@ export default function Reports() {
       </div>
 
       {/* =================================================
+          ENTERPRISE CAMPUS & MODULE OCCUPANCY RATES (1500+ SCALE)
+      ================================================= */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {campusUtilization.map((fac) => {
+          const isHigh = fac.rate >= 85;
+          const isMid = fac.rate >= 60 && fac.rate < 85;
+          const colorClass = isHigh
+            ? 'bg-rose-500'
+            : isMid
+            ? 'bg-amber-500'
+            : 'bg-emerald-500';
+          const badgeClass = isHigh
+            ? 'bg-rose-50 text-rose-700 border-rose-200'
+            : isMid
+            ? 'bg-amber-50 text-amber-700 border-amber-200'
+            : 'bg-emerald-50 text-emerald-700 border-emerald-200';
+
+          return (
+            <Card key={fac.name} className="p-3 shadow-xs border-slate-200/90">
+              <div className="flex items-start justify-between gap-1">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                    {fac.location}
+                  </span>
+                  <h3 className="font-bold text-xs text-slate-900 mt-0.5 truncate" title={fac.name}>
+                    {fac.name}
+                  </h3>
+                </div>
+                <span className={`px-2 py-0.5 rounded text-[9.5px] font-bold border ${badgeClass} whitespace-nowrap shrink-0`}>
+                  {fac.rate}% Full
+                </span>
+              </div>
+
+              <div className="mt-2 flex items-baseline justify-between text-xs">
+                <span className="font-extrabold text-slate-800 text-sm">
+                  {fac.booked} <span className="text-[10.5px] text-slate-400 font-normal">/ {fac.capacity}</span>
+                </span>
+                <span className="text-[10.5px] text-slate-500 font-medium">{fac.badge}</span>
+              </div>
+
+              <div className="mt-1.5 h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${colorClass}`}
+                  style={{ width: `${fac.rate}%` }}
+                />
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* =================================================
           PREVIEW CARD WITH [ 👁 VIEW ] BUTTON
       ================================================= */}
       <Card className="p-5 shadow-sm">
@@ -1104,46 +1235,57 @@ export default function Reports() {
           </div>
 
           <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap shrink-0 max-w-full pb-1 xl:pb-0">
-            {/* MONTHLY / WEEKLY TOGGLE (for Volume Trendline) */}
+            {/* DAILY / WEEKLY / MONTHLY TOGGLE (for Volume Trendline) */}
             {activeChart === 'trend' && (
-              <div className="flex items-center rounded-lg bg-slate-100 p-0.5 text-xs shrink-0">
+              <div className="flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 p-0.5 text-xs shrink-0 border border-slate-200/60 dark:border-slate-700">
                 <button
                   type="button"
-                  onClick={() => setTrendPeriod('Monthly')}
+                  onClick={() => setTrendPeriod('Daily')}
                   className={`rounded-md px-2 py-1 text-xs font-bold transition-all ${
-                    trendPeriod === 'Monthly'
-                      ? 'bg-white text-ink shadow-xs'
-                      : 'text-slate hover:text-ink'
+                    trendPeriod === 'Daily'
+                      ? 'bg-white dark:bg-slate-700 text-sky-700 dark:text-sky-300 shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  Monthly
+                  Daily
                 </button>
                 <button
                   type="button"
                   onClick={() => setTrendPeriod('Weekly')}
                   className={`rounded-md px-2 py-1 text-xs font-bold transition-all ${
                     trendPeriod === 'Weekly'
-                      ? 'bg-white text-ink shadow-xs'
-                      : 'text-slate hover:text-ink'
+                      ? 'bg-white dark:bg-slate-700 text-sky-700 dark:text-sky-300 shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   Weekly
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTrendPeriod('Monthly')}
+                  className={`rounded-md px-2 py-1 text-xs font-bold transition-all ${
+                    trendPeriod === 'Monthly'
+                      ? 'bg-white dark:bg-slate-700 text-sky-700 dark:text-sky-300 shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  Monthly
                 </button>
               </div>
             )}
 
             {/* TAB PILLS - ALL IN ONE SINGLE LINE */}
-            <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl flex-nowrap shrink-0 whitespace-nowrap overflow-x-auto max-w-full">
+            <div className="flex items-center gap-1 bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/60 dark:border-slate-700 p-1 rounded-xl flex-nowrap shrink-0 whitespace-nowrap overflow-x-auto max-w-full">
               <button
                 type="button"
                 onClick={() => setActiveChart('trend')}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
                   activeChart === 'trend'
-                    ? 'bg-white text-sky-700 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                    ? 'bg-white dark:bg-slate-700 text-sky-700 dark:text-sky-300 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50'
                 }`}
               >
-                <TrendingUp size={13} className={activeChart === 'trend' ? 'text-sky-600' : 'text-slate-400'} />
+                <TrendingUp size={13} className={activeChart === 'trend' ? 'text-sky-600 dark:text-sky-400' : 'text-slate-400 dark:text-slate-500'} />
                 <span>Volume Trend</span>
               </button>
 
@@ -1152,11 +1294,11 @@ export default function Reports() {
                 onClick={() => setActiveChart('outcome')}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
                   activeChart === 'outcome'
-                    ? 'bg-white text-sky-700 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                    ? 'bg-white dark:bg-slate-700 text-sky-700 dark:text-sky-300 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50'
                 }`}
               >
-                <Sparkles size={13} className={activeChart === 'outcome' ? 'text-emerald-600' : 'text-slate-400'} />
+                <Sparkles size={13} className={activeChart === 'outcome' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'} />
                 <span>Outcomes</span>
               </button>
 
@@ -1165,11 +1307,11 @@ export default function Reports() {
                 onClick={() => setActiveChart('employee')}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
                   activeChart === 'employee'
-                    ? 'bg-white text-sky-700 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                    ? 'bg-white dark:bg-slate-700 text-sky-700 dark:text-sky-300 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50'
                 }`}
               >
-                <Users size={13} className={activeChart === 'employee' ? 'text-sky-600' : 'text-slate-400'} />
+                <Users size={13} className={activeChart === 'employee' ? 'text-sky-600 dark:text-sky-400' : 'text-slate-400 dark:text-slate-500'} />
                 <span>Employee Ratio</span>
               </button>
 
@@ -1178,11 +1320,11 @@ export default function Reports() {
                 onClick={() => setActiveChart('rooms')}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
                   activeChart === 'rooms'
-                    ? 'bg-white text-sky-700 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                    ? 'bg-white dark:bg-slate-700 text-sky-700 dark:text-sky-300 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50'
                 }`}
               >
-                <Building2 size={13} className={activeChart === 'rooms' ? 'text-sky-600' : 'text-slate-400'} />
+                <Building2 size={13} className={activeChart === 'rooms' ? 'text-sky-600 dark:text-sky-400' : 'text-slate-400 dark:text-slate-500'} />
                 <span>Workspace Ranking</span>
               </button>
 
@@ -1191,11 +1333,11 @@ export default function Reports() {
                 onClick={() => setActiveChart('hourly')}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
                   activeChart === 'hourly'
-                    ? 'bg-white text-sky-700 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                    ? 'bg-white dark:bg-slate-700 text-sky-700 dark:text-sky-300 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50'
                 }`}
               >
-                <Clock size={13} className={activeChart === 'hourly' ? 'text-indigo-600' : 'text-slate-400'} />
+                <Clock size={13} className={activeChart === 'hourly' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'} />
                 <span>Hourly Demand</span>
               </button>
             </div>
@@ -1353,16 +1495,16 @@ export default function Reports() {
       {isAuditModalOpen &&
         createPortal(
           <div className="fixed inset-0 z-[10000] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
-            <div className="w-full max-w-5xl rounded-2xl bg-white shadow-2xl p-4 sm:p-5 relative flex flex-col max-h-[86vh] border border-slate-200 animate-in zoom-in-95 duration-150">
+            <div className="w-full max-w-5xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl p-4 sm:p-5 relative flex flex-col max-h-[86vh] border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-150">
               {/* Modal Header */}
-              <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
-                <h2 className="text-sm font-bold text-slate-900 font-display">
+              <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white font-display">
                   Workplace Reservation Records & Audit
                 </h2>
                 <button
                   type="button"
                   onClick={() => setIsAuditModalOpen(false)}
-                  className="text-slate-400 hover:text-slate-700 transition-colors p-1 rounded-lg hover:bg-slate-100"
+                  className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
                   <X size={16} />
                 </button>
@@ -1370,7 +1512,7 @@ export default function Reports() {
 
               {/* Subheader with Filter Count & Search */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-1.5">
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   Showing {displayedTableBookings.length} of {bookings.length} reservations matching active filters.
                 </p>
 
@@ -1379,13 +1521,13 @@ export default function Reports() {
                     value={tableSearch}
                     onChange={(e) => setTableSearch(e.target.value)}
                     placeholder="Search bookings, rooms, employees..."
-                    className="w-full sm:w-56 rounded-lg border border-slate-200 bg-white px-3 py-1 text-[11px] h-7.5 text-slate-800 placeholder:text-slate-400 outline-none focus:border-sky-500 shadow-xs"
+                    className="w-full sm:w-56 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1 text-[11px] h-7.5 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 outline-none focus:border-sky-500 shadow-xs"
                   />
                   {tableSearch && (
                     <button
                       type="button"
                       onClick={() => setTableSearch('')}
-                      className="text-xs font-bold text-slate-400 hover:text-slate-700 px-1"
+                      className="text-xs font-bold text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 px-1"
                       title="Clear search"
                     >
                       ✕
@@ -1395,11 +1537,11 @@ export default function Reports() {
               </div>
 
               {/* Table Container Box */}
-              <div className="mt-1 rounded-xl border border-slate-200 overflow-hidden flex-1 flex flex-col min-h-0">
+              <div className="mt-1 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden flex-1 flex flex-col min-h-0">
                 <div className="overflow-y-auto overflow-x-hidden max-h-[360px]">
                   <table className="w-full table-fixed text-left text-[11px]">
-                    <thead className="sticky top-0 z-10 bg-slate-50/90 backdrop-blur-xs shadow-xs">
-                      <tr className="border-b border-slate-200 text-[9.5px] font-bold uppercase tracking-wider text-slate-600">
+                    <thead className="sticky top-0 z-10 bg-slate-50/90 dark:bg-slate-800/95 backdrop-blur-xs shadow-xs">
+                      <tr className="border-b border-slate-200 dark:border-slate-700 text-[9.5px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                         <th className="w-[8%] px-2 py-1.5 whitespace-nowrap">BOOKING ID</th>
                         <th className="w-[19%] px-2 py-1.5 truncate">MEETING TITLE</th>
                         <th className="w-[13%] px-2 py-1.5 truncate">ROOM</th>

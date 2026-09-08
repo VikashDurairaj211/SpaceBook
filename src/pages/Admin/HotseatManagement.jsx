@@ -189,22 +189,22 @@ function CustomChartTooltip({ active, payload, label }) {
   if (!active || !payload || !payload.length) return null
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white/95 p-3 shadow-xl backdrop-blur-sm">
-      <p className="font-semibold text-xs text-slate-800">{label}</p>
+    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 p-3 shadow-xl backdrop-blur-sm">
+      <p className="font-semibold text-xs text-slate-800 dark:text-slate-100">{label}</p>
       <div className="mt-1 space-y-1">
         {payload.map((item, idx) => (
           <div
             key={idx}
             className="flex items-center justify-between gap-4 text-xs"
           >
-            <span className="flex items-center gap-1.5 text-slate-600">
+            <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
               <span
                 className="inline-block h-2.5 w-2.5 rounded-full"
                 style={{ backgroundColor: item.color || item.fill }}
               />
               {item.name}:
             </span>
-            <span className="font-bold text-slate-900">
+            <span className="font-bold text-slate-900 dark:text-white">
               {item.value} {item.unit || ''}
             </span>
           </div>
@@ -1069,19 +1069,18 @@ export default function HotseatManagement() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
+          <button
+            type="button"
             onClick={loadData}
             disabled={loading}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-lg shadow-xs transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw
-              size={14}
+              size={13}
               className={loading ? 'animate-spin text-sky-600' : 'text-slate-500'}
             />
-            <span>Refresh</span>
-          </Button>
+            <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
+          </button>
 
           <Button
             size="sm"
@@ -1673,16 +1672,16 @@ export default function HotseatManagement() {
       {isAuditModalOpen &&
         createPortal(
           <div className="fixed inset-0 z-[10000] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
-            <div className="w-full max-w-5xl rounded-2xl bg-white shadow-2xl p-4 sm:p-5 relative flex flex-col max-h-[86vh] border border-slate-200 animate-in zoom-in-95 duration-150">
+            <div className="w-full max-w-5xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl p-4 sm:p-5 relative flex flex-col max-h-[86vh] border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-150">
               {/* Modal Header */}
-              <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
-                <h2 className="text-sm font-bold text-slate-900 font-display">
+              <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white font-display">
                   Hotseat Reservation Records & Audit
                 </h2>
                 <button
                   type="button"
                   onClick={() => setIsAuditModalOpen(false)}
-                  className="text-slate-400 hover:text-slate-700 transition-colors p-1 rounded-lg hover:bg-slate-100"
+                  className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
                   <X size={16} />
                 </button>
@@ -1690,7 +1689,7 @@ export default function HotseatManagement() {
 
               {/* Subheader with Filter Count & Search */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-1.5">
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   Showing {displayedTableBookings.length} of {bookings.length} reservations matching active filters.
                 </p>
 
@@ -1699,13 +1698,13 @@ export default function HotseatManagement() {
                     value={tableSearch}
                     onChange={(e) => setTableSearch(e.target.value)}
                     placeholder="Search hotseats, employees..."
-                    className="w-full sm:w-56 rounded-lg border border-slate-200 bg-white px-3 py-1 text-[11px] h-7.5 text-slate-800 placeholder:text-slate-400 outline-none focus:border-sky-500 shadow-xs"
+                    className="w-full sm:w-56 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1 text-[11px] h-7.5 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 outline-none focus:border-sky-500 shadow-xs"
                   />
                   {tableSearch && (
                     <button
                       type="button"
                       onClick={() => setTableSearch('')}
-                      className="text-xs font-bold text-slate-400 hover:text-slate-700 px-1"
+                      className="text-xs font-bold text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 px-1"
                       title="Clear search"
                     >
                       ✕
@@ -1715,11 +1714,11 @@ export default function HotseatManagement() {
               </div>
 
               {/* Table Container Box */}
-              <div className="mt-1 rounded-xl border border-slate-200 overflow-hidden flex-1 flex flex-col min-h-0">
+              <div className="mt-1 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden flex-1 flex flex-col min-h-0">
                 <div className="overflow-y-auto overflow-x-hidden max-h-[360px]">
                   <table className="w-full table-fixed text-left text-[11px]">
-                    <thead className="sticky top-0 z-10 bg-slate-50/90 backdrop-blur-xs shadow-xs">
-                      <tr className="border-b border-slate-200 text-[9.5px] font-bold uppercase tracking-wider text-slate-600">
+                    <thead className="sticky top-0 z-10 bg-slate-50/90 dark:bg-slate-800/95 backdrop-blur-xs shadow-xs">
+                      <tr className="border-b border-slate-200 dark:border-slate-700 text-[9.5px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                         <th className="w-[8%] px-2 py-1.5 whitespace-nowrap">BOOKING ID</th>
                         <th className="w-[18%] px-2 py-1.5 truncate">EMPLOYEE NAME</th>
                         <th className="w-[13%] px-2 py-1.5 truncate">SEAT</th>
